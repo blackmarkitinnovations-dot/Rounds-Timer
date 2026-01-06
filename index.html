@@ -737,10 +737,8 @@ header{
       /* reduce outer padding so the center panel gets more height */
       .content{
         padding: 6px !important;
-        grid-template-columns: 1fr !important;
+        grid-template-columns: minmax(220px, 280px) 1fr;
       }
-      .leftCol{ display:none !important; }
-
       /* give the timer panel more usable space */
       .mainPanel{
         padding: 6px 10px !important;
@@ -797,12 +795,9 @@ header{
       }
       /* maximize timer space in short landscape */
       .content{
-        grid-template-columns: 1fr !important;
+        grid-template-columns: minmax(220px, 280px) 1fr;
       }
-      .leftCol{
-        display: none !important;
       }
-    }
 
     /* Silent-mode visual flash */
     .flashOverlay{
