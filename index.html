@@ -913,6 +913,20 @@ header{
     /* When side panels are collapsed via the Panels button */
     .leftCol.hidden{ display:none !important; }
 
+    /* Slide-out left panels (horizontal) */
+    .content{
+      transition: grid-template-columns .25s ease;
+    }
+    .leftCol{
+      transition: transform .25s ease, opacity .25s ease;
+      will-change: transform;
+    }
+    .leftCol.slideClosed{
+      transform: translateX(-110%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
   </style>
 </head>
 
@@ -1790,7 +1804,7 @@ header{
       // left column collapsed (Panels button)
       const leftEnabledBySettings = settings.showWarnings || settings.showPresets;
       const showLeft = leftEnabledBySettings && !ui.leftCollapsed;
-      document.getElementById("leftCol").classList.toggle("hidden", !showLeft);
+      document.getElementById("leftCol").classList.toggle("slideClosed", !showLeft);
 
       // Full width mode whenever the left column isn't showing
       contentEl.classList.toggle("fullWidth", !showLeft);
