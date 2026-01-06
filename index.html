@@ -61,10 +61,16 @@
     @media (max-width: 720px), (max-height: 720px){
       .app{
         width:100vw;
-        height:100vh;
+
+        /* Correct mobile viewport handling (prevents clipping under browser bars) */
+        height: 100dvh;      /* modern browsers */
+        height: 100svh;      /* iOS Safari fallback */
+        height: 100vh;       /* last resort */
+
         border-radius:0;
         border:none;
         box-shadow:none;
+        margin:0;
       }
     }
 
@@ -146,7 +152,8 @@
       grid-template-columns: minmax(240px, 320px) 1fr;
       gap: clamp(10px, 1.4vw, 14px);
       padding: clamp(10px, 1.4vw, 14px);
-      overflow:hidden;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
       padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal));
       padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
     }
@@ -265,7 +272,7 @@
     .presetBtn .pname{
       font-weight:900;
       letter-spacing:.10em;
-      font-size: clamp(16px, 2.4vw, 20px);
+      font-size: clamp(18px, 4.5vw, 22px);
       white-space:nowrap;
     }
     .presetBtn .pmeta{
@@ -314,7 +321,7 @@
     .bigTimer{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-weight:900;
-      font-size: clamp(96px, 14vw, 220px);
+      font-size: clamp(72px, 18vw, 220px);
       color:var(--red);
       line-height:0.94;
       letter-spacing:.05em;
@@ -347,12 +354,18 @@
     }
     .roundRow .label{ color:#fff; opacity:.95; font-size: clamp(18px, 2.8vw, 34px); }
     .roundRow .value{ color:#fff; font-size: clamp(44px, 6.5vw, 84px); }
+
+    @media (max-width: 480px){
+      .roundRow{ gap: 8px; }
+      .roundRow .label{ font-size: 16px; }
+      .roundRow .value{ font-size: 36px; }
+    }
     .struck{ text-decoration: line-through; opacity:.55; }
 
     .smallTimer{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-weight:900;
-      font-size: clamp(64px, 9vw, 148px);
+      font-size: clamp(48px, 14vw, 148px);
       color:var(--yellow);
       line-height:0.98;
       letter-spacing:.05em;
@@ -366,6 +379,8 @@
     footer{
       height: clamp(64px, 10vh, 78px);
       flex:0 0 auto;
+      position: relative;
+      z-index: 5;
       border-top:1px solid var(--stroke);
       padding: clamp(10px, 1.6vw, 12px) clamp(10px, 1.8vw, 14px);
       display:flex;
@@ -856,6 +871,45 @@
     }
     let settings = loadSettings();
 
+    // ---------------- Wake Lock (prevent screen sleep while running) ----------------
+    // Works on most modern Chrome/Edge/Android; iOS Safari support is limited.
+    let wakeLock = null;
+
+    async function requestWakeLock(){
+      try{
+        if (!("wakeLock" in navigator)) return;
+        if (wakeLock) return; // already held
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+      }catch{
+        // ignore (permission, unsupported, etc.)
+      }
+    }
+
+    async function releaseWakeLock(){
+      try{
+        if (wakeLock){
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      }catch{
+        // ignore
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      // If the page comes back visible while running, try to re-acquire.
+      if (document.visibilityState === "visible"){
+        if (state && state.running && !state.paused){
+          requestWakeLock();
+        }
+      } else {
+        // Release when hidden to avoid errors; browser will drop it anyway.
+        releaseWakeLock();
+      }
+    });
+
+
     // ---------- Helpers ----------
     function fmtMMSS_Countdown(ms){
       ms = Math.max(0, Math.round(ms));
@@ -1188,6 +1242,7 @@
       state.firedEndWarnThisPhase = false;
     }
     function resetRunState(){
+      releaseWakeLock();
       state.phase = "work";
       state.currentRound = 1;
       state.running = false;
@@ -1510,6 +1565,7 @@
       } else {
         state.paused = false;
       }
+      if (state.running && !state.paused) requestWakeLock();
       render();
     });
 
@@ -1517,6 +1573,8 @@
       userTapAudioPrime();
       if (!state.running) return;
       state.paused = !state.paused;
+      if (state.paused) releaseWakeLock();
+      else requestWakeLock();
       render();
     });
 
