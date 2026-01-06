@@ -53,8 +53,8 @@
 
     /* APP becomes responsive: full screen on phone, framed on desktop */
     .app{
+      height: var(--apph, min(800px, 100vh));
       width: min(1280px, 100vw);
-      height: min(800px, 100vh);
       margin: auto;
       border:1px solid var(--stroke);
       border-radius:24px;
@@ -72,8 +72,8 @@
         width:100vw;
 
         /* Fit the visual viewport on mobile (prevents clipping under browser bars) */
-        height: 100dvh;
-        max-height: 100dvh;
+        height: var(--apph, 100dvh);
+        max-height: var(--apph, 100dvh);
 
         border-radius:0;
         border:none;
@@ -875,6 +875,24 @@ header{
   <div class="toast" id="toast">Saved</div>
 
   <script>
+
+    // ---------- iOS Safari viewport fix ----------
+    // Keeps the UI sized to the *visible* viewport so the Safari toolbars don't cover timers/buttons.
+    (function(){
+      function setAppHeight(){
+        const vv = window.visualViewport;
+        const h = vv ? Math.round(vv.height) : window.innerHeight;
+        document.documentElement.style.setProperty("--apph", h + "px");
+      }
+      setAppHeight();
+      window.addEventListener("resize", setAppHeight, {passive:true});
+      window.addEventListener("orientationchange", () => setTimeout(setAppHeight, 50), {passive:true});
+      if (window.visualViewport){
+        window.visualViewport.addEventListener("resize", setAppHeight, {passive:true});
+        window.visualViewport.addEventListener("scroll", setAppHeight, {passive:true});
+      }
+    })();
+
     // ---------------- Persistent Settings ----------------
     const SETTINGS_KEY = "hiit_settings_v4_responsive";
     const defaultSettings = {
