@@ -28,8 +28,17 @@
     }
 
     *{ box-sizing:border-box; }
-    html,body{ height:100%; }
+    html, body{
+      height:100%;
+      padding:0;
+      overflow:hidden;
+    }
+
+    /* iOS Safari: keep app pinned to the *visible* viewport so toolbars don't cover UI */
     body{
+      position: fixed;
+      inset: 0;
+
       margin:0;
       background: radial-gradient(1200px 600px at 50% 0%, #171a23 0%, var(--bg) 55%, #06070a 100%);
       color:var(--text);
@@ -62,10 +71,9 @@
       .app{
         width:100vw;
 
-        /* Correct mobile viewport handling (prevents clipping under browser bars) */
-        height: 100dvh;      /* modern browsers */
-        height: 100svh;      /* iOS Safari fallback */
-        height: 100vh;       /* last resort */
+        /* Fit the visual viewport on mobile (prevents clipping under browser bars) */
+        height: 100dvh;
+        max-height: 100dvh;
 
         border-radius:0;
         border:none;
@@ -73,8 +81,7 @@
         margin:0;
       }
     }
-
-    header{
+header{
       height: clamp(52px, 8vh, 64px);
       display:flex;
       align-items:center;
@@ -146,13 +153,14 @@
     .btnRow.red{ background: linear-gradient(180deg, rgba(255,43,43,.95), rgba(95,18,18,.65)); border-color: rgba(255,43,43,.35); }
 
     .content{
-      flex:1;
+      flex: 1 1 auto;
       min-height:0;
       display:grid;
       grid-template-columns: minmax(240px, 320px) 1fr;
       gap: clamp(10px, 1.4vw, 14px);
       padding: clamp(10px, 1.4vw, 14px);
-      overflow:auto;
+      overflow-y:auto;
+      overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
       padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal));
       padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
@@ -648,6 +656,39 @@
     }
     .toast.show{ opacity:1; }
     .hidden{ display:none !important; }
+    /* iPhone landscape: tighten chrome so timers & footer always fit */
+    @media (orientation: landscape) and (max-height: 500px){
+      header{
+        height: 44px;
+        font-size: 14px;
+      }
+      .topControls{
+        height: 52px;
+        padding: 6px;
+      }
+      footer{
+        height: 52px;
+        padding: 6px;
+      }
+      .bigTimer{
+        font-size: clamp(48px, 14vw, 110px);
+        line-height: 0.92;
+      }
+      .smallTimer{
+        font-size: clamp(32px, 10vw, 72px);
+      }
+      .roundRow .value{
+        font-size: clamp(26px, 6vw, 48px);
+      }
+      /* maximize timer space in short landscape */
+      .content{
+        grid-template-columns: 1fr !important;
+      }
+      .leftCol{
+        display: none !important;
+      }
+    }
+
   </style>
 </head>
 
