@@ -34,7 +34,7 @@
     html, body{
       height:100%;
       padding:0;
-      overflow: visible;
+      overflow: hidden;
     }
 
     /* iOS Safari: keep app pinned to the *visible* viewport so toolbars don't cover UI */
@@ -56,6 +56,8 @@
 
     /* APP becomes responsive: full screen on phone, framed on desktop */
     .app{
+      max-width: 100vw;
+
       height: var(--apph, min(800px, 100vh));
       width: min(1280px, 100vw);
       margin: auto;
@@ -876,6 +878,41 @@ header{
       .leftCol .blockBody{ overflow: auto; }
     }
 
+    /* Small phone portrait: prevent timer text from overflowing sideways */
+    @media (max-width: 520px) and (orientation: portrait){
+      .mainPanel{ padding-left: 8px !important; padding-right: 8px !important; }
+      .bigTimer, .smallTimer{
+        width: 100%;
+        white-space: nowrap;
+        letter-spacing: .02em;
+      }
+    }
+
+    /* Collapsible side panels */
+    .blockHeader.clickable{
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 40px;
+    }
+    .blockHeader.clickable::after{
+      content: "▾";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: .85;
+      font-size: 16px;
+    }
+    .block.collapsed .blockHeader.clickable::after{
+      content: "▸";
+    }
+    .block.collapsed .blockBody{
+      display: none;
+    }
+    /* When side panels are collapsed via the Panels button */
+    .leftCol.hidden{ display:none !important; }
+
   </style>
 </head>
 
@@ -886,6 +923,14 @@ header{
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.5-2.4.6a8 8 0 0 0-1.7-1L14 2h-4l-.4 2.6a8 8 0 0 0-1.7 1L5.5 5 3.5 8.5 5.5 10a7.9 7.9 0 0 0 0 2L3.5 13.5 5.5 17l2.4-.6a8 8 0 0 0 1.7 1L10 22h4l.4-2.6a8 8 0 0 0 1.7-1l2.4.6 2-3.5-2-1.5z"></path>
+        </svg>
+      </div>
+
+      <div class="settingsBtn" id="togglePanels" title="Show/Hide Panels" style="left:auto; right: calc(10px + var(--sar));">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 6h16"></path>
+          <path d="M4 12h16"></path>
+          <path d="M4 18h16"></path>
         </svg>
       </div>
       Timer
@@ -900,7 +945,7 @@ header{
     <div class="content">
       <aside class="leftCol" id="leftCol">
         <section class="block" id="warningsBlock">
-          <div class="blockHeader"><span>Warnings</span></div>
+          <div class="blockHeader clickable" id="warningsHeader"><span>Warnings</span></div>
           <div class="blockBody">
             <div class="warnRow">
               <button class="btn warnBtn" id="btnStartWarn">Start Warn</button>
@@ -914,7 +959,7 @@ header{
         </section>
 
         <section class="block" id="presetsBlock" style="flex:1; min-height:0;">
-          <div class="blockHeader">Presets</div>
+          <div class="blockHeader clickable" id="presetsHeader">Presets</div>
           <div class="blockBody" style="padding:10px;">
             <div class="presetGrid">
               <button class="btn presetBtn" id="preset1"><span class="pname" id="preset1Label">--:--</span><span class="pmeta" id="preset1Meta">hold to save</span></button>
@@ -1116,6 +1161,30 @@ header{
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }
     let settings = loadSettings();
+
+    // ---------------- UI State (panel collapse) ----------------
+    const UI_KEY = "hiit_ui_v1";
+    const defaultUI = {
+      leftCollapsed: false,
+      warningsCollapsed: false,
+      presetsCollapsed: false
+    };
+    function loadUI(){
+      try{
+        const raw = localStorage.getItem(UI_KEY);
+        if (!raw) return { ...defaultUI };
+        const u = JSON.parse(raw);
+        return {
+          leftCollapsed: !!u.leftCollapsed,
+          warningsCollapsed: !!u.warningsCollapsed,
+          presetsCollapsed: !!u.presetsCollapsed
+        };
+      }catch{
+        return { ...defaultUI };
+      }
+    }
+    function saveUI(){ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }
+    let ui = loadUI();
 
     // ---------------- Wake Lock (prevent screen sleep while running) ----------------
     // Works on most modern Chrome/Edge/Android; iOS Safari support is limited.
@@ -1455,7 +1524,9 @@ header{
     const toggleEndWarn = document.getElementById("toggleEndWarn");
 
     const warningsBlock = document.getElementById("warningsBlock");
+    const warningsHeader = document.getElementById("warningsHeader");
     const presetsBlock = document.getElementById("presetsBlock");
+    const presetsHeader = document.getElementById("presetsHeader");
 
     const modalBackdrop = document.getElementById("modalBackdrop");
     const modalTitle = document.getElementById("modalTitle");
@@ -1465,6 +1536,7 @@ header{
     const pad = document.getElementById("pad");
 
     const openSettingsBtn = document.getElementById("openSettings");
+    const togglePanelsBtn = document.getElementById("togglePanels");
     const settingsBackdrop = document.getElementById("settingsBackdrop");
     const closeSettingsBtn = document.getElementById("closeSettings");
 
@@ -1707,12 +1779,20 @@ header{
     }
 
     function render(){
-      // show/hide blocks
+      // show/hide blocks (settings)
       warningsBlock.classList.toggle("hidden", !settings.showWarnings);
       presetsBlock.classList.toggle("hidden", !settings.showPresets);
 
-      // Full width mode when both hidden
-      const showLeft = settings.showWarnings || settings.showPresets;
+      // collapse state (tap headers)
+      warningsBlock.classList.toggle("collapsed", !!ui.warningsCollapsed);
+      presetsBlock.classList.toggle("collapsed", !!ui.presetsCollapsed);
+
+      // left column collapsed (Panels button)
+      const leftEnabledBySettings = settings.showWarnings || settings.showPresets;
+      const showLeft = leftEnabledBySettings && !ui.leftCollapsed;
+      document.getElementById("leftCol").classList.toggle("hidden", !showLeft);
+
+      // Full width mode whenever the left column isn't showing
       contentEl.classList.toggle("fullWidth", !showLeft);
 
       // timers
@@ -1920,6 +2000,31 @@ header{
 
     testClack.addEventListener("click", () => { userTapAudioPrime(); clacksN(); });
     testBuzz.addEventListener("click", () => { userTapAudioPrime(); buzzer({freqHz:500}); });
+
+
+    // ---------- Panels toggle + collapsible headers ----------
+    togglePanelsBtn.addEventListener("click", () => {
+      userTapAudioPrime();
+      ui.leftCollapsed = !ui.leftCollapsed;
+      saveUI();
+      render();
+    });
+
+    warningsHeader.addEventListener("click", () => {
+      userTapAudioPrime();
+      if (!settings.showWarnings) return;
+      ui.warningsCollapsed = !ui.warningsCollapsed;
+      saveUI();
+      render();
+    });
+
+    presetsHeader.addEventListener("click", () => {
+      userTapAudioPrime();
+      if (!settings.showPresets) return;
+      ui.presetsCollapsed = !ui.presetsCollapsed;
+      saveUI();
+      render();
+    });
 
     openSettingsBtn.addEventListener("click", () => {
       userTapAudioPrime();
