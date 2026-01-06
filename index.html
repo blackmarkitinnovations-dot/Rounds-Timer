@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <!-- iOS: enables true fullscreen when launched from Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Timer</title>
 
   <style>
@@ -31,7 +34,7 @@
     html, body{
       height:100%;
       padding:0;
-      overflow:hidden;
+      overflow: visible;
     }
 
     /* iOS Safari: keep app pinned to the *visible* viewport so toolbars don't cover UI */
@@ -656,12 +659,65 @@ header{
     }
     .toast.show{ opacity:1; }
     .hidden{ display:none !important; }
-    /* iPhone landscape: tighten chrome so timers & footer always fit */
-    @media (orientation: landscape) and (max-height: 500px){
+    
+    /* iPhone landscape: tighten layout so timers & footer always fit */
+    @media (orientation: landscape) and (max-width: 950px){
       header{
-        height: 44px;
-        font-size: 14px;
+        height: 42px;
+        font-size: 13px;
       }
+      .topControls{
+        height: 50px;
+        padding: 6px;
+      }
+      footer{
+        height: 50px;
+        padding: 6px;
+      }
+
+      /* reduce outer padding so the center panel gets more height */
+      .content{
+        padding: 6px !important;
+        grid-template-columns: 1fr !important;
+      }
+      .leftCol{ display:none !important; }
+
+      /* give the timer panel more usable space */
+      .mainPanel{
+        padding: 6px 10px !important;
+        justify-content: space-evenly !important;
+        overflow: visible !important; /* prevent glyph clipping */
+      }
+
+      .phasePill{
+        top: 6px; right: 8px;
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      .bigTimer{
+        font-size: clamp(46px, 13vw, 104px);
+        line-height: 0.90;
+        margin-top: 2px;
+      }
+      .divider{
+        margin: 6px 0 4px;
+        height: 2px;
+      }
+      .roundRow{
+        margin: 4px 0;
+        gap: 10px;
+      }
+      .roundRow .label{ font-size: clamp(14px, 2.5vw, 22px); }
+      .roundRow .value{ font-size: clamp(22px, 5.5vw, 44px); }
+
+      .smallTimer{
+        font-size: clamp(28px, 9vw, 64px);
+        line-height: 0.92;
+        margin-bottom: 2px;
+      }
+    }
+
       .topControls{
         height: 52px;
         padding: 6px;
