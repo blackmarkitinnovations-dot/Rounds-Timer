@@ -660,13 +660,72 @@ header{
     .toast.show{ opacity:1; }
     .hidden{ display:none !important; }
     
-    /* iPhone landscape: tighten layout so timers & footer always fit */
+    
+    /* iPhone landscape: tighten layout so timers & footer always fit (without forcing side panels hidden) */
     @media (orientation: landscape) and (max-width: 950px){
       header{
         height: 42px;
         font-size: 13px;
       }
       .topControls{
+        height: 50px;
+        padding: 6px;
+      }
+      footer{
+        height: 50px;
+        padding: 6px;
+      }
+
+      /* reduce outer padding so the center panel gets more height */
+      .content{
+        padding: 6px !important;
+        /* keep your normal 2-column layout when left blocks are enabled;
+           JS will switch to .content.fullWidth automatically when both are off */
+        grid-template-columns: minmax(220px, 280px) 1fr;
+        gap: 8px;
+      }
+
+      /* give the timer panel more usable space */
+      .mainPanel{
+        padding: 6px 10px !important;
+        justify-content: space-evenly !important;
+        overflow: visible !important; /* prevent glyph clipping */
+      }
+
+      .phasePill{
+        top: 6px; right: 8px;
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      .bigTimer{
+        font-size: clamp(46px, 13vw, 104px);
+        line-height: 0.90;
+        margin-top: 2px;
+      }
+      .divider{
+        margin: 6px 0 4px;
+        height: 2px;
+      }
+      .roundRow{
+        margin: 4px 0;
+        gap: 10px;
+      }
+      .roundRow .label{ font-size: clamp(14px, 2.5vw, 22px); }
+      .roundRow .value{ font-size: clamp(22px, 5.5vw, 44px); }
+
+      .smallTimer{
+        font-size: clamp(28px, 9vw, 64px);
+        line-height: 0.92;
+        margin-bottom: 2px;
+      }
+
+      /* make left blocks scroll within their column if needed */
+      .leftCol{ overflow: hidden; }
+      .leftCol .blockBody{ overflow: auto; }
+    }
+
+.topControls{
         height: 50px;
         padding: 6px;
       }
@@ -743,6 +802,20 @@ header{
       .leftCol{
         display: none !important;
       }
+    }
+
+    /* Silent-mode visual flash */
+    .flashOverlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
+      transition: opacity 0.08s ease;
+    }
+    .flashOverlay.show{
+      opacity: 1;
     }
 
   </style>
@@ -1052,6 +1125,26 @@ header{
       return String(mm).padStart(2,'0') + String(ss).padStart(2,'0');
     }
 
+    
+    // ---------- Silent-mode fallback (iOS Silent Switch) ----------
+    function vibratePattern(pattern){
+      if ("vibrate" in navigator){
+        try{ navigator.vibrate(pattern); }catch(e){}
+      }
+    }
+    function flashScreen(times=1){
+      const el = document.getElementById("flashOverlay");
+      if (!el) return;
+      let i = 0;
+      const flashOnce = () => {
+        el.classList.add("show");
+        setTimeout(() => el.classList.remove("show"), 60);
+        i++;
+        if (i < times) setTimeout(flashOnce, 120);
+      };
+      flashOnce();
+    }
+
     // ---------- Audio ----------
     let audioCtx = null;
     let audioUnlocked = false;
@@ -1094,6 +1187,8 @@ header{
     }
 
     function buzzer({durationMs, freqHz=500, gain} = {}){
+      vibratePattern([200,100,200]);
+      flashScreen(1);
       ensureAudio();
       if (!audioCtx || audioCtx.state !== "running") return;
 
@@ -1208,6 +1303,8 @@ header{
     }
 
     function clacksN(){
+      vibratePattern([80,60,80,60,80]);
+      flashScreen(settings.clapCount || 3);
       ensureAudio();
       if (!audioCtx || audioCtx.state !== "running") return;
       const t0 = audioCtx.currentTime + 0.01;
