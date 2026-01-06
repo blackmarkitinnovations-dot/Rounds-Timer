@@ -171,13 +171,6 @@ header{
       padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
     }
 
-    /* FULL WIDTH MODE (fixes your “shift left” issue) */
-    .content.fullWidth{
-      grid-template-columns: 1fr;
-      gap: 0;
-    }
-    .content.fullWidth .leftCol{ display:none; }
-    .content.fullWidth .mainPanel{ width:100%; }
 
     .leftCol{
       display:flex;
@@ -682,7 +675,6 @@ header{
       .content{
         padding: 6px !important;
         /* keep your normal 2-column layout when left blocks are enabled;
-           JS will switch to .content.fullWidth automatically when both are off */
         grid-template-columns: minmax(220px, 280px) 1fr;
         gap: 8px;
       }
@@ -942,6 +934,82 @@ header{
       height: 18px;
     }
 
+    /* Side tab drawers (Warnings / Presets) */
+    .content{
+      position: relative;
+      grid-template-columns: 1fr; /* main panel always full width; drawers overlay */
+    }
+    .sideDock{
+      position:absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 20;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      padding: 10px 0 10px calc(0px + var(--sal));
+      pointer-events: none;
+    }
+
+    .drawer{
+      --tabw: 42px;
+      width: min(320px, 85vw);
+      max-height: 100%;
+      display:flex;
+      pointer-events: auto;
+      transform: translateX(calc(-100% + var(--tabw)));
+      transition: transform .22s ease;
+      filter: drop-shadow(0 14px 30px rgba(0,0,0,.45));
+    }
+    .drawer.open{ transform: translateX(0); }
+
+    .tabBtn{
+      width: var(--tabw);
+      border: 1px solid rgba(255,255,255,.14);
+      border-right: none;
+      background: rgba(0,0,0,.30);
+      color: var(--text);
+      font-weight: 900;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      border-radius: 14px 0 0 14px;
+      padding: 10px 0;
+      cursor: pointer;
+      user-select: none;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 12px;
+    }
+    .tabBtn:active{ transform: rotate(180deg) translateY(1px); filter: brightness(.95); }
+
+    .drawerPanel{
+      flex:1;
+      min-width: 0;
+      border: 1px solid var(--stroke2);
+      border-left: none;
+      border-radius: 0 18px 18px 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+      overflow: hidden;
+      display:flex;
+    }
+
+    .drawerPanel .block{
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      flex:1;
+      min-height:0;
+    }
+
+    .drawer:not(.open) .drawerPanel{ pointer-events: none; }
+
+    @media (orientation: landscape) and (max-width: 950px){
+      .drawer{ --tabw: 38px; width: min(300px, 80vw); }
+      .tabBtn{ font-size: 11px; }
+      .sideDock{ gap: 8px; padding-top: 6px; padding-bottom: 6px; }
+    }
+
   </style>
 </head>
 
@@ -954,16 +1022,7 @@ header{
           <path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.5-2.4.6a8 8 0 0 0-1.7-1L14 2h-4l-.4 2.6a8 8 0 0 0-1.7 1L5.5 5 3.5 8.5 5.5 10a7.9 7.9 0 0 0 0 2L3.5 13.5 5.5 17l2.4-.6a8 8 0 0 0 1.7 1L10 22h4l.4-2.6a8 8 0 0 0 1.7-1l2.4.6 2-3.5-2-1.5z"></path>
         </svg>
       </div>
-
-      
-      <div class="settingsBtn panelTab" id="togglePanels" title="Show/Hide Panels">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M14 6l-6 6 6 6"></path>
-        </svg>
-      </div>
-    
-      Timer
+Timer
     </header>
 
     <div class="topControls">
@@ -973,9 +1032,13 @@ header{
     </div>
 
     <div class="content">
-      <aside class="leftCol" id="leftCol">
-        <section class="block" id="warningsBlock">
-          <div class="blockHeader clickable" id="warningsHeader"><span>Warnings</span></div>
+      <!-- Side tab drawers (Warnings / Presets) -->
+      <div class="sideDock" id="sideDock">
+        <div class="drawer" id="warningsDrawer" data-drawer="warnings" aria-label="Warnings panel">
+          <button class="tabBtn" id="warningsTab" type="button">Warnings</button>
+          <div class="drawerPanel">
+            <section class="block" id="warningsBlock">
+          <div class="blockHeader"><span>Warnings</span></div>
           <div class="blockBody">
             <div class="warnRow">
               <button class="btn warnBtn" id="btnStartWarn">Start Warn</button>
@@ -987,9 +1050,14 @@ header{
             </div>
           </div>
         </section>
+          </div>
+        </div>
 
-        <section class="block" id="presetsBlock" style="flex:1; min-height:0;">
-          <div class="blockHeader clickable" id="presetsHeader">Presets</div>
+        <div class="drawer" id="presetsDrawer" data-drawer="presets" aria-label="Presets panel">
+          <button class="tabBtn" id="presetsTab" type="button">Presets</button>
+          <div class="drawerPanel">
+            <section class="block" id="presetsBlock" style="flex:1; min-height:0;">
+          <div class="blockHeader">Presets</div>
           <div class="blockBody" style="padding:10px;">
             <div class="presetGrid">
               <button class="btn presetBtn" id="preset1"><span class="pname" id="preset1Label">--:--</span><span class="pmeta" id="preset1Meta">hold to save</span></button>
@@ -1000,9 +1068,11 @@ header{
             </div>
           </div>
         </section>
-      </aside>
+          </div>
+        </div>
+      </div>
 
-      <main class="mainPanel">
+<main class="mainPanel">
         <div class="phasePill work" id="phasePill">WORK</div>
 
         <div class="bigTimer" id="workDisplay">05:00</div>
@@ -1192,28 +1262,22 @@ header{
     }
     let settings = loadSettings();
 
-    // ---------------- UI State (panel collapse) ----------------
-    const UI_KEY = "hiit_ui_v1";
-    const defaultUI = {
-      leftCollapsed: false,
-      warningsCollapsed: false,
-      presetsCollapsed: false
-    };
+    // ---------------- UI State (side drawers) ----------------
+    const UI_KEY = "hiit_ui_v2_drawers";
+    const defaultUI = { warningsOpen: false, presetsOpen: false };
     function loadUI(){
       try{
         const raw = localStorage.getItem(UI_KEY);
         if (!raw) return { ...defaultUI };
         const u = JSON.parse(raw);
-        return {
-          leftCollapsed: !!u.leftCollapsed,
-          warningsCollapsed: !!u.warningsCollapsed,
-          presetsCollapsed: !!u.presetsCollapsed
-        };
+        return { warningsOpen: !!u.warningsOpen, presetsOpen: !!u.presetsOpen };
       }catch{
         return { ...defaultUI };
       }
     }
+    let ui = loadUI();
     function saveUI(){ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }
+
     let ui = loadUI();
 
     // ---------------- Wake Lock (prevent screen sleep while running) ----------------
@@ -1553,11 +1617,9 @@ header{
     const toggleStartWarn = document.getElementById("toggleStartWarn");
     const toggleEndWarn = document.getElementById("toggleEndWarn");
 
-    const warningsBlock = document.getElementById("warningsBlock");
-    const warningsHeader = document.getElementById("warningsHeader");
-    const presetsBlock = document.getElementById("presetsBlock");
-    const presetsHeader = document.getElementById("presetsHeader");
-
+    const warningsBlock = document.getElementById("warningsBlock");    const presetsBlock = document.getElementById("presetsBlock");
+    const presetsDrawer = document.getElementById("presetsDrawer");
+    const presetsTab = document.getElementById("presetsTab");
     const modalBackdrop = document.getElementById("modalBackdrop");
     const modalTitle = document.getElementById("modalTitle");
     const modalHint = document.getElementById("modalHint");
@@ -1565,9 +1627,7 @@ header{
     const currentConfig = document.getElementById("currentConfig");
     const pad = document.getElementById("pad");
 
-    const openSettingsBtn = document.getElementById("openSettings");
-    const togglePanelsBtn = document.getElementById("togglePanels");
-    const settingsBackdrop = document.getElementById("settingsBackdrop");
+    const openSettingsBtn = document.getElementById("openSettings");    const settingsBackdrop = document.getElementById("settingsBackdrop");
     const closeSettingsBtn = document.getElementById("closeSettings");
 
     const toggleWarnVisible = document.getElementById("toggleWarnVisible");
@@ -1809,25 +1869,28 @@ header{
     }
 
     function render(){
-      // show/hide blocks (settings)
+      // enable/disable drawers based on Settings toggles
+      warningsDrawer.classList.toggle("hidden", !settings.showWarnings);
+      presetsDrawer.classList.toggle("hidden", !settings.showPresets);
+
+      // if a drawer is disabled, force it closed
+      if (!settings.showWarnings) ui.warningsOpen = false;
+      if (!settings.showPresets) ui.presetsOpen = false;
+
+      // open/close state (only one open at a time)
+      if (ui.warningsOpen && ui.presetsOpen) ui.presetsOpen = false;
+
+      warningsDrawer.classList.toggle("open", ui.warningsOpen);
+      presetsDrawer.classList.toggle("open", ui.presetsOpen);
+
+      // keep inner blocks hidden when disabled (so existing code doesn't break)
       warningsBlock.classList.toggle("hidden", !settings.showWarnings);
       presetsBlock.classList.toggle("hidden", !settings.showPresets);
 
-      // collapse state (tap headers)
-      warningsBlock.classList.toggle("collapsed", !!ui.warningsCollapsed);
-      presetsBlock.classList.toggle("collapsed", !!ui.presetsCollapsed);
-
-      // left column collapsed (Panels button)
-      const leftEnabledBySettings = settings.showWarnings || settings.showPresets;
-      const showLeft = leftEnabledBySettings && !ui.leftCollapsed;
-      const leftColEl = document.getElementById("leftCol");
-      leftColEl.classList.toggle("slideClosed", !showLeft);
-      togglePanelsBtn.querySelector("svg").style.transform = showLeft ? "rotate(0deg)" : "rotate(180deg)";
-
-      // Full width mode whenever the left column isn't showing
-      contentEl.classList.toggle("fullWidth", !showLeft);
+      saveUI();
 
       // timers
+
       workDisplay.textContent = state.workInfinite
         ? fmtMMSS_FromSeconds(state.workElapsedSec)
         : fmtMMSS_Countdown(state.remainingWorkMs);
@@ -2032,16 +2095,6 @@ header{
 
     testClack.addEventListener("click", () => { userTapAudioPrime(); clacksN(); });
     testBuzz.addEventListener("click", () => { userTapAudioPrime(); buzzer({freqHz:500}); });
-
-
-    // ---------- Panels toggle + collapsible headers ----------
-    togglePanelsBtn.addEventListener("click", () => {
-      userTapAudioPrime();
-      ui.leftCollapsed = !ui.leftCollapsed;
-      saveUI();
-      render();
-    });
-
     warningsHeader.addEventListener("click", () => {
       userTapAudioPrime();
       if (!settings.showWarnings) return;
@@ -2054,6 +2107,26 @@ header{
       userTapAudioPrime();
       if (!settings.showPresets) return;
       ui.presetsCollapsed = !ui.presetsCollapsed;
+      saveUI();
+      render();
+    });
+
+
+    // ---------- Side tabs (Warnings / Presets) ----------
+    warningsTab.addEventListener("click", () => {
+      userTapAudioPrime();
+      if (!settings.showWarnings) return;
+      ui.warningsOpen = !ui.warningsOpen;
+      if (ui.warningsOpen) ui.presetsOpen = false;
+      saveUI();
+      render();
+    });
+
+    presetsTab.addEventListener("click", () => {
+      userTapAudioPrime();
+      if (!settings.showPresets) return;
+      ui.presetsOpen = !ui.presetsOpen;
+      if (ui.presetsOpen) ui.warningsOpen = false;
       saveUI();
       render();
     });
