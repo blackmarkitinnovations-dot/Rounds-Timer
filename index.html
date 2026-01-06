@@ -927,6 +927,21 @@ header{
       pointer-events: none;
     }
 
+    /* Slide tab button (arrow) */
+    .panelTab{
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 0 14px 14px 0;
+      width: 36px;
+      height: 56px;
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 8px 20px rgba(0,0,0,.45);
+    }
+    .panelTab svg{
+      width: 18px;
+      height: 18px;
+    }
+
   </style>
 </head>
 
@@ -940,13 +955,14 @@ header{
         </svg>
       </div>
 
-      <div class="settingsBtn" id="togglePanels" title="Show/Hide Panels" style="left:auto; right: calc(10px + var(--sar));">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 6h16"></path>
-          <path d="M4 12h16"></path>
-          <path d="M4 18h16"></path>
+      
+      <div class="settingsBtn panelTab" id="togglePanels" title="Show/Hide Panels">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 6l-6 6 6 6"></path>
         </svg>
       </div>
+    
       Timer
     </header>
 
@@ -1804,7 +1820,9 @@ header{
       // left column collapsed (Panels button)
       const leftEnabledBySettings = settings.showWarnings || settings.showPresets;
       const showLeft = leftEnabledBySettings && !ui.leftCollapsed;
-      document.getElementById("leftCol").classList.toggle("slideClosed", !showLeft);
+      const leftColEl = document.getElementById("leftCol");
+      leftColEl.classList.toggle("slideClosed", !showLeft);
+      togglePanelsBtn.querySelector("svg").style.transform = showLeft ? "rotate(0deg)" : "rotate(180deg)";
 
       // Full width mode whenever the left column isn't showing
       contentEl.classList.toggle("fullWidth", !showLeft);
