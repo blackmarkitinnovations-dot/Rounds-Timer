@@ -1,0 +1,1708 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Timer</title>
+
+  <style>
+    :root{
+      --bg:#0b0c0f;
+      --stroke:#242733;
+      --stroke2:#2f3444;
+      --text:#e9edf7;
+      --muted:#a9b2c7;
+      --red:#ff2b2b;
+      --yellow:#ffd400;
+      --green:#28d17c;
+      --orange:#ff9a2a;
+      --shadow: 0 16px 48px rgba(0,0,0,.45);
+      --card: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+      --card2: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+
+      /* iOS safe area */
+      --sat: env(safe-area-inset-top);
+      --sar: env(safe-area-inset-right);
+      --sab: env(safe-area-inset-bottom);
+      --sal: env(safe-area-inset-left);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 50% 0%, #171a23 0%, var(--bg) 55%, #06070a 100%);
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      overflow:hidden;
+      display:flex;
+      align-items:stretch;
+      justify-content:stretch;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    /* APP becomes responsive: full screen on phone, framed on desktop */
+    .app{
+      width: min(1280px, 100vw);
+      height: min(800px, 100vh);
+      margin: auto;
+      border:1px solid var(--stroke);
+      border-radius:24px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      background: var(--card);
+      display:flex;
+      flex-direction:column;
+      position:relative;
+    }
+
+    /* On small screens, remove frame + radius so it fits perfectly */
+    @media (max-width: 720px), (max-height: 720px){
+      .app{
+        width:100vw;
+        height:100vh;
+        border-radius:0;
+        border:none;
+        box-shadow:none;
+      }
+    }
+
+    header{
+      height: clamp(52px, 8vh, 64px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-bottom:1px solid var(--stroke);
+      background: var(--card2);
+      letter-spacing:.20em;
+      font-weight:900;
+      text-transform:uppercase;
+      color:#dfe6ff;
+      font-size: clamp(14px, 2.2vw, 20px);
+      flex:0 0 auto;
+      position:relative;
+      padding-top: var(--sat);
+      padding-left: var(--sal);
+      padding-right: var(--sar);
+    }
+
+    .settingsBtn{
+      position:absolute;
+      left: calc(10px + var(--sal));
+      top: calc(10px + var(--sat));
+      width: clamp(36px, 6vw, 44px);
+      height: clamp(36px, 6vw, 44px);
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+    }
+    .settingsBtn:active{ transform: translateY(1px); filter: brightness(.95); }
+    .settingsBtn svg{ width: clamp(18px, 3.5vw, 22px); height: clamp(18px, 3.5vw, 22px); opacity:.92; }
+
+    .topControls{
+      height: clamp(64px, 10vh, 78px);
+      flex:0 0 auto;
+      border-bottom:1px solid var(--stroke);
+      padding: clamp(10px, 1.6vw, 12px) clamp(10px, 1.8vw, 14px);
+      display:flex;
+      gap: clamp(8px, 1.4vw, 12px);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      padding-left: calc(clamp(10px, 1.8vw, 14px) + var(--sal));
+      padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
+    }
+
+    .btnRow{
+      flex:1;
+      padding: clamp(12px, 2.2vh, 16px) clamp(10px, 1.8vw, 14px);
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+      color:var(--text);
+      font-weight:900;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      cursor:pointer;
+      user-select:none;
+      font-size: clamp(13px, 2.2vw, 16px);
+      transition: transform .06s ease, filter .15s ease;
+      min-width: 0;
+    }
+    .btnRow:active{ transform: translateY(1px); filter:brightness(.95); }
+    .btnRow:disabled{ opacity:.45; cursor:not-allowed; }
+    .btnRow.green{ background: linear-gradient(180deg, rgba(40,209,124,.95), rgba(18,80,55,.65)); border-color: rgba(40,209,124,.35); }
+    .btnRow.orange{ background: linear-gradient(180deg, rgba(255,154,42,.95), rgba(94,54,15,.65)); border-color: rgba(255,154,42,.35); }
+    .btnRow.red{ background: linear-gradient(180deg, rgba(255,43,43,.95), rgba(95,18,18,.65)); border-color: rgba(255,43,43,.35); }
+
+    .content{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns: minmax(240px, 320px) 1fr;
+      gap: clamp(10px, 1.4vw, 14px);
+      padding: clamp(10px, 1.4vw, 14px);
+      overflow:hidden;
+      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal));
+      padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
+    }
+
+    /* FULL WIDTH MODE (fixes your “shift left” issue) */
+    .content.fullWidth{
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .content.fullWidth .leftCol{ display:none; }
+    .content.fullWidth .mainPanel{ width:100%; }
+
+    .leftCol{
+      display:flex;
+      flex-direction:column;
+      gap: clamp(10px, 1.2vw, 12px);
+      min-height:0;
+      overflow:hidden;
+    }
+
+    .block{
+      border:1px solid var(--stroke2);
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    .blockHeader{
+      padding: 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-size: 12px;
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .blockBody{
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:0;
+      overflow:auto;
+    }
+
+    .btn{
+      border:1px solid rgba(255,255,255,.10);
+      border-bottom-color: rgba(0,0,0,.35);
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+      color:var(--text);
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      border-radius:14px;
+      padding: 12px;
+      font-size: 15px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .06s ease, filter .15s ease;
+      min-width:0;
+    }
+    .btn:active{ transform: translateY(1px); filter:brightness(.95); }
+
+    .warnRow{ display:flex; gap:10px; align-items:center; }
+    .warnBtn{ flex:1; padding:10px; font-size:13px; border-radius:12px; }
+
+    .switch{
+      width:46px; height:26px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      cursor:pointer;
+      position:relative;
+      flex:0 0 auto;
+      user-select:none;
+    }
+    .switch::after{
+      content:"";
+      position:absolute;
+      top:3px; left:3px;
+      width:20px; height:20px;
+      border-radius:999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.45));
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+      transition:left .18s ease;
+    }
+    .switch.on{
+      background: rgba(40,209,124,.18);
+      border-color: rgba(40,209,124,.35);
+    }
+    .switch.on::after{ left:23px; }
+
+    .presetGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      min-height:0;
+      overflow:auto;
+      padding-right:2px;
+    }
+    .presetBtn{
+      padding: 12px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .presetBtn .pname{
+      font-weight:900;
+      letter-spacing:.10em;
+      font-size: clamp(16px, 2.4vw, 20px);
+      white-space:nowrap;
+    }
+    .presetBtn .pmeta{
+      font-size: clamp(12px, 2vw, 13px);
+      color:var(--muted);
+      letter-spacing:.06em;
+      font-weight:800;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .mainPanel{
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      padding: clamp(6px, 1vw, 10px) clamp(10px, 1.6vw, 14px);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+      min-width:0;
+    }
+
+    .phasePill{
+      position:absolute;
+      top:10px; right:10px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-size:12px;
+      color:var(--muted);
+      z-index:2;
+    }
+    .phasePill.work{ color:#ffb3b3; border-color: rgba(255,43,43,.22); }
+    .phasePill.rest{ color:#ffeaa1; border-color: rgba(255,212,0,.22); }
+    .phasePill.paused{ color:#c8d6ff; border-color: rgba(140,170,255,.22); }
+    .phasePill.inf{ color:#d7ddff; border-color: rgba(170,190,255,.22); }
+
+    /* Big timer scales: phones ~96px, tablets ~170px, desktop ~220px */
+    .bigTimer{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-weight:900;
+      font-size: clamp(96px, 14vw, 220px);
+      color:var(--red);
+      line-height:0.94;
+      letter-spacing:.05em;
+      text-shadow: 0 10px 30px rgba(255,43,43,.22);
+      margin:0;
+      text-align:center;
+      width:100%;
+    }
+    .divider{
+      width: min(82%, 700px);
+      height:3px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
+      border-radius:999px;
+      margin: clamp(8px, 1.4vh, 12px) 0 clamp(6px, 1vh, 10px);
+      flex:0 0 auto;
+    }
+
+    .roundRow{
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+      gap: clamp(10px, 2vw, 18px);
+      text-transform:uppercase;
+      font-weight:900;
+      letter-spacing:.14em;
+      margin: clamp(6px, 1vh, 10px) 0;
+      flex:0 0 auto;
+      flex-wrap: wrap;
+      text-align:center;
+    }
+    .roundRow .label{ color:#fff; opacity:.95; font-size: clamp(18px, 2.8vw, 34px); }
+    .roundRow .value{ color:#fff; font-size: clamp(44px, 6.5vw, 84px); }
+    .struck{ text-decoration: line-through; opacity:.55; }
+
+    .smallTimer{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-weight:900;
+      font-size: clamp(64px, 9vw, 148px);
+      color:var(--yellow);
+      line-height:0.98;
+      letter-spacing:.05em;
+      text-shadow: 0 10px 30px rgba(255,212,0,.18);
+      margin:0;
+      text-align:center;
+      width:100%;
+    }
+    .smallTimer.dim{ opacity:.35; }
+
+    footer{
+      height: clamp(64px, 10vh, 78px);
+      flex:0 0 auto;
+      border-top:1px solid var(--stroke);
+      padding: clamp(10px, 1.6vw, 12px) clamp(10px, 1.8vw, 14px);
+      display:flex;
+      gap: clamp(8px, 1.4vw, 12px);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      padding-bottom: calc(clamp(10px, 1.6vw, 12px) + var(--sab));
+      padding-left: calc(clamp(10px, 1.8vw, 14px) + var(--sal));
+      padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
+    }
+    .bottomBtn{
+      flex:1;
+      padding: clamp(12px, 2.2vh, 16px) clamp(10px, 1.8vw, 14px);
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+      color:var(--text);
+      font-weight:900;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      cursor:pointer;
+      user-select:none;
+      font-size: clamp(13px, 2.2vw, 16px);
+      transition: transform .06s ease, filter .15s ease;
+      min-width:0;
+    }
+    .bottomBtn:active{ transform: translateY(1px); filter:brightness(.95); }
+
+    /* Phone layout: stack left column under main timers */
+    @media (max-width: 780px){
+      .content{
+        grid-template-columns: 1fr;
+      }
+      .leftCol{
+        flex-direction:column;
+      }
+      /* make the left blocks a bit shorter on phone */
+      .blockHeader{ padding:10px 12px; }
+      .blockBody{ padding:10px 12px; }
+    }
+
+    /* keypad modal */
+    .modalBackdrop{
+      position:fixed;
+      inset:0;
+      background:#0b0c0f;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:50;
+    }
+    .modalBackdrop.show{ display:flex; }
+    .modal{
+      width:min(520px, 92vw);
+      border-radius:22px;
+      background:#141826;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHeader{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--stroke);
+      background:#111522;
+      gap:10px;
+    }
+    .modalHeader .title{
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:13px;
+      color:#dfe6ff;
+    }
+    .modalHeader .hint{ font-size:12px; color:var(--muted); }
+    .entry{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-bottom:1px solid var(--stroke);
+      background:#0e111b;
+    }
+    .entryValue{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-weight:900;
+      font-size: clamp(34px, 7vw, 44px);
+      letter-spacing:.08em;
+      color:#fff;
+    }
+    .pad{
+      padding:14px 16px 16px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      background:#141826;
+    }
+    .key{
+      padding:16px 0;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+      font-weight:900;
+      font-size: clamp(20px, 5vw, 26px);
+      color:var(--text);
+      cursor:pointer;
+      user-select:none;
+    }
+    .key:active{ transform: translateY(1px); filter:brightness(.95); }
+    .key.wide{ grid-column: span 2; }
+    .key.actionEnter{
+      background: linear-gradient(180deg, rgba(40,209,124,.95), rgba(18,80,55,.65));
+      border-color: rgba(40,209,124,.35);
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      font-size: clamp(14px, 3.2vw, 18px);
+    }
+    .key.actionCancel{
+      background: linear-gradient(180deg, rgba(255,154,42,.95), rgba(94,54,15,.65));
+      border-color: rgba(255,154,42,.35);
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      font-size: clamp(14px, 3.2vw, 18px);
+    }
+    .key.actionAlt{
+      background: linear-gradient(180deg, rgba(140,170,255,.55), rgba(50,70,140,.35));
+      border-color: rgba(140,170,255,.35);
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      font-size: clamp(14px, 3.2vw, 18px);
+    }
+
+    /* Settings page modal */
+    .settingsBackdrop{
+      position:fixed;
+      inset:0;
+      background:#0b0c0f;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:60;
+    }
+    .settingsBackdrop.show{ display:flex; }
+    .settingsModal{
+      width:min(860px, 96vw);
+      height:min(640px, 92vh);
+      border-radius:22px;
+      background:#141826;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .settingsTop{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--stroke);
+      background:#111522;
+      gap:10px;
+    }
+    .settingsTop .title{
+      font-weight:900;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-size:14px;
+      color:#dfe6ff;
+    }
+    .settingsClose{
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:900;
+      padding:10px 12px;
+      cursor:pointer;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .settingsClose:active{ transform: translateY(1px); filter:brightness(.95); }
+
+    .settingsBody{
+      padding:16px;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:14px;
+      overflow:auto;
+    }
+    @media (max-width: 900px){
+      .settingsBody{ grid-template-columns: 1fr; }
+      .settingsModal{ height: min(740px, 92vh); }
+    }
+
+    .setCard{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      padding:14px;
+      min-width:0;
+    }
+    .setCard h3{
+      margin:0 0 10px 0;
+      font-size:12px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      font-weight:900;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      min-width:0;
+    }
+    .row:last-child{ border-bottom:none; }
+    .row .label{
+      font-weight:900;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      font-size:12px;
+      color:#e9edf7;
+      white-space:nowrap;
+    }
+    .row .value{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color:var(--muted);
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.08em;
+      min-width:64px;
+      text-align:right;
+      white-space:nowrap;
+    }
+    .settingsBody input[type="range"]{ width:100%; min-width:0; }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom: calc(18px + var(--sab));
+      background: rgba(20,24,38,.95);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-size:12px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.35);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      z-index:80;
+    }
+    .toast.show{ opacity:1; }
+    .hidden{ display:none !important; }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <div class="settingsBtn" id="openSettings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.5-2.4.6a8 8 0 0 0-1.7-1L14 2h-4l-.4 2.6a8 8 0 0 0-1.7 1L5.5 5 3.5 8.5 5.5 10a7.9 7.9 0 0 0 0 2L3.5 13.5 5.5 17l2.4-.6a8 8 0 0 0 1.7 1L10 22h4l.4-2.6a8 8 0 0 0 1.7-1l2.4.6 2-3.5-2-1.5z"></path>
+        </svg>
+      </div>
+      Timer
+    </header>
+
+    <div class="topControls">
+      <button class="btnRow green" id="btnStart">Start</button>
+      <button class="btnRow orange" id="btnPause">Pause</button>
+      <button class="btnRow red" id="btnReset">Reset</button>
+    </div>
+
+    <div class="content">
+      <aside class="leftCol" id="leftCol">
+        <section class="block" id="warningsBlock">
+          <div class="blockHeader"><span>Warnings</span></div>
+          <div class="blockBody">
+            <div class="warnRow">
+              <button class="btn warnBtn" id="btnStartWarn">Start Warn</button>
+              <div class="switch" id="toggleStartWarn" role="switch" aria-checked="false" tabindex="0"></div>
+            </div>
+            <div class="warnRow">
+              <button class="btn warnBtn" id="btnEndWarn">End Warn</button>
+              <div class="switch" id="toggleEndWarn" role="switch" aria-checked="false" tabindex="0"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="block" id="presetsBlock" style="flex:1; min-height:0;">
+          <div class="blockHeader">Presets</div>
+          <div class="blockBody" style="padding:10px;">
+            <div class="presetGrid">
+              <button class="btn presetBtn" id="preset1"><span class="pname" id="preset1Label">--:--</span><span class="pmeta" id="preset1Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset2"><span class="pname" id="preset2Label">--:--</span><span class="pmeta" id="preset2Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset3"><span class="pname" id="preset3Label">--:--</span><span class="pmeta" id="preset3Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset4"><span class="pname" id="preset4Label">--:--</span><span class="pmeta" id="preset4Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset5"><span class="pname" id="preset5Label">--:--</span><span class="pmeta" id="preset5Meta">hold to save</span></button>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="mainPanel">
+        <div class="phasePill work" id="phasePill">WORK</div>
+
+        <div class="bigTimer" id="workDisplay">05:00</div>
+        <div class="divider"></div>
+
+        <div class="roundRow">
+          <div class="label" id="roundLabel">ROUND</div>
+          <div class="value" id="roundDisplay">1</div>
+          <div class="label" id="slashLabel" style="opacity:.55;letter-spacing:.08em;font-weight:800;">/</div>
+          <div class="value" id="roundTotalDisplay" style="opacity:.8;">8</div>
+        </div>
+
+        <div class="smallTimer" id="restDisplay">00:30</div>
+      </main>
+    </div>
+
+    <footer>
+      <button class="bottomBtn" id="setWork">Work</button>
+      <button class="bottomBtn" id="setRest">Rest</button>
+      <button class="bottomBtn" id="setRounds">Rounds</button>
+    </footer>
+  </div>
+
+  <!-- keypad -->
+  <div class="modalBackdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modalHeader">
+        <div>
+          <div class="title" id="modalTitle">SET WORK</div>
+          <div class="hint" id="modalHint"></div>
+        </div>
+        <div class="hint" id="currentConfig"></div>
+      </div>
+
+      <div class="entry">
+        <div class="entryValue" id="entryValue">00:00</div>
+      </div>
+
+      <div class="pad" id="pad">
+        <button class="key" data-k="1">1</button>
+        <button class="key" data-k="2">2</button>
+        <button class="key" data-k="3">3</button>
+
+        <button class="key" data-k="4">4</button>
+        <button class="key" data-k="5">5</button>
+        <button class="key" data-k="6">6</button>
+
+        <button class="key" data-k="7">7</button>
+        <button class="key" data-k="8">8</button>
+        <button class="key" data-k="9">9</button>
+
+        <button class="key actionAlt" data-k="infinite">Infinite</button>
+        <button class="key" data-k="0">0</button>
+        <button class="key actionAlt" data-k="clear">Clear</button>
+
+        <button class="key actionCancel wide" data-k="cancel">Cancel</button>
+        <button class="key actionEnter" data-k="enter">Enter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- settings page -->
+  <div class="settingsBackdrop" id="settingsBackdrop" aria-hidden="true">
+    <div class="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settingsTop">
+        <div class="title" id="settingsTitle">Settings</div>
+        <button class="settingsClose" id="closeSettings">Close</button>
+      </div>
+
+      <div class="settingsBody">
+        <div class="setCard">
+          <h3>Clap / Clack</h3>
+
+          <div class="row">
+            <div class="label">Volume</div>
+            <input type="range" id="clapVol" min="0" max="3" step="0.01" />
+            <div class="value" id="clapVolVal"></div>
+          </div>
+
+          <div class="row">
+            <div class="label">Speed (interval)</div>
+            <input type="range" id="clapInterval" min="0.03" max="0.25" step="0.01" />
+            <div class="value" id="clapIntervalVal"></div>
+          </div>
+        </div>
+
+        <div class="setCard">
+          <h3>Buzzer</h3>
+
+          <div class="row">
+            <div class="label">Volume</div>
+            <input type="range" id="buzzVol" min="0" max="1" step="0.01" />
+            <div class="value" id="buzzVolVal"></div>
+          </div>
+
+          <div class="row">
+            <div class="label">Duration (ms)</div>
+            <input type="range" id="buzzDur" min="100" max="1500" step="25" />
+            <div class="value" id="buzzDurVal"></div>
+          </div>
+        </div>
+
+        <div class="setCard" style="grid-column: 1 / -1;">
+          <h3>Display</h3>
+
+          <div class="row">
+            <div class="label">Show Warnings Block</div>
+            <div class="switch" id="toggleWarnVisible" role="switch" aria-checked="true" tabindex="0"></div>
+            <div class="value" id="warnVisibleVal"></div>
+          </div>
+
+          <div class="row">
+            <div class="label">Show Presets Block</div>
+            <div class="switch" id="togglePresetsVisible" role="switch" aria-checked="true" tabindex="0"></div>
+            <div class="value" id="presetsVisibleVal"></div>
+          </div>
+
+          <div class="row">
+            <div class="label">Test Sounds</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+              <button class="settingsClose" id="testClack" style="background:rgba(140,170,255,.12);">Test Clap</button>
+              <button class="settingsClose" id="testBuzz" style="background:rgba(255,212,0,.12);">Test Buzzer</button>
+            </div>
+            <div class="value"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved</div>
+
+  <script>
+    // ---------------- Persistent Settings ----------------
+    const SETTINGS_KEY = "hiit_settings_v4_responsive";
+    const defaultSettings = {
+      clapVolume: 1.0,
+      clapInterval: 0.08,
+      clapCount: 4,
+      buzzVolume: 0.35,
+      buzzDurationMs: 450,
+      showWarnings: true,
+      showPresets: true
+    };
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    function loadSettings(){
+      try{
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) return { ...defaultSettings };
+        const s = JSON.parse(raw);
+        return {
+          clapVolume: typeof s.clapVolume === "number" ? clamp(s.clapVolume,0,3) : defaultSettings.clapVolume,
+          clapInterval: typeof s.clapInterval === "number" ? clamp(s.clapInterval,0.03,0.25) : defaultSettings.clapInterval,
+          clapCount: typeof s.clapCount === "number" ? clamp(s.clapCount,1,8) : defaultSettings.clapCount,
+          buzzVolume: typeof s.buzzVolume === "number" ? clamp(s.buzzVolume,0,1) : defaultSettings.buzzVolume,
+          buzzDurationMs: typeof s.buzzDurationMs === "number" ? clamp(s.buzzDurationMs,100,1500) : defaultSettings.buzzDurationMs,
+          showWarnings: typeof s.showWarnings === "boolean" ? s.showWarnings : defaultSettings.showWarnings,
+          showPresets: typeof s.showPresets === "boolean" ? s.showPresets : defaultSettings.showPresets
+        };
+      }catch{
+        return { ...defaultSettings };
+      }
+    }
+    function saveSettings(){
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+    let settings = loadSettings();
+
+    // ---------- Helpers ----------
+    function fmtMMSS_Countdown(ms){
+      ms = Math.max(0, Math.round(ms));
+      const totalSec = Math.ceil(ms / 1000);
+      const mm = Math.floor(totalSec / 60);
+      const ss = totalSec % 60;
+      return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+    }
+    function fmtMMSS_FromSeconds(sec){
+      sec = Math.max(0, Math.floor(sec));
+      const mm = Math.floor(sec / 60);
+      const ss = sec % 60;
+      return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+    }
+    function mmssDigitsToMs(digits){
+      const d = digits.padStart(4,'0').slice(-4);
+      const mm = parseInt(d.slice(0,2), 10);
+      const ss = clamp(parseInt(d.slice(2,4), 10), 0, 59);
+      return (mm * 60 + ss) * 1000;
+    }
+    function msToMMSSDigits(ms){
+      const totalSec = Math.max(0, Math.round(ms / 1000));
+      const mm = Math.floor(totalSec / 60);
+      const ss = totalSec % 60;
+      return String(mm).padStart(2,'0') + String(ss).padStart(2,'0');
+    }
+
+    // ---------- Audio ----------
+    let audioCtx = null;
+    let audioUnlocked = false;
+
+    function ensureAudio(){
+      if (!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended"){
+        audioCtx.resume().catch(()=>{});
+      }
+    }
+    function unlockAudio(){
+      ensureAudio();
+      if (!audioCtx || audioUnlocked) return;
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(500, t0);
+      g.gain.setValueAtTime(0.00001, t0);
+      osc.connect(g).connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.02);
+      audioUnlocked = true;
+    }
+    function userTapAudioPrime(){
+      unlockAudio();
+      ensureAudio();
+    }
+
+    function makeSoftClipCurve(amount){
+      const n = 44100;
+      const curve = new Float32Array(n);
+      for (let i=0;i<n;i++){
+        const x = (i/(n-1))*2 - 1;
+        curve[i] = Math.tanh(x / amount);
+      }
+      return curve;
+    }
+
+    function buzzer({durationMs, freqHz=500, gain} = {}){
+      ensureAudio();
+      if (!audioCtx || audioCtx.state !== "running") return;
+
+      const dur = (typeof durationMs === "number") ? durationMs : settings.buzzDurationMs;
+      const gLevel = (typeof gain === "number") ? gain : settings.buzzVolume;
+
+      const t0 = audioCtx.currentTime;
+      const t1 = t0 + dur/1000;
+
+      const osc = audioCtx.createOscillator();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(freqHz, t0);
+
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gLevel, t0 + 0.015);
+
+      const chopHz = 25, step = 1 / chopHz;
+      let on = true;
+      for (let t = t0; t < t1; t += step){
+        g.gain.setValueAtTime(on ? gLevel : gLevel * 0.12, t);
+        on = !on;
+      }
+      g.gain.exponentialRampToValueAtTime(0.0001, t1);
+
+      const len = Math.floor(audioCtx.sampleRate * (dur/1000));
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i=0;i<len;i++) data[i] = (Math.random()*2 - 1) * 0.25;
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buf;
+
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.setValueAtTime(1400, t0);
+      bp.Q.setValueAtTime(0.8, t0);
+
+      const ng = audioCtx.createGain();
+      ng.gain.setValueAtTime(gLevel * 0.22, t0);
+
+      const mix = audioCtx.createGain();
+      osc.connect(mix);
+      noise.connect(bp); bp.connect(ng); ng.connect(mix);
+
+      mix.connect(g);
+      g.connect(audioCtx.destination);
+
+      osc.start(t0);
+      noise.start(t0);
+      osc.stop(t1 + 0.02);
+      noise.stop(t1 + 0.02);
+    }
+
+    function clampClick(atTime){
+      const t0 = atTime;
+      const VOL = settings.clapVolume;
+
+      const dur = 0.045;
+      const len = Math.floor(audioCtx.sampleRate * dur);
+
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+
+      for (let i=0;i<len;i++){
+        const x = i / len;
+        const env = Math.pow(1 - x, 2.2);
+        data[i] = (Math.random()*2 - 1) * env;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buf;
+
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.setValueAtTime(3200, t0);
+      bp.Q.setValueAtTime(1.4, t0);
+
+      const osc = audioCtx.createOscillator();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(2400, t0);
+
+      const og = audioCtx.createGain();
+      og.gain.setValueAtTime(0.0001, t0);
+      og.gain.exponentialRampToValueAtTime(0.45 * VOL, t0 + 0.002);
+      og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.018);
+
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(1.10 * VOL, t0 + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+      noise.connect(bp).connect(g);
+      osc.connect(og);
+
+      const mix = audioCtx.createGain();
+      g.connect(mix);
+      og.connect(mix);
+
+      const shaper = audioCtx.createWaveShaper();
+      shaper.curve = makeSoftClipCurve(0.85);
+      shaper.oversample = "4x";
+
+      const out = audioCtx.createGain();
+      out.gain.setValueAtTime(1.35, t0);
+
+      mix.connect(shaper).connect(out).connect(audioCtx.destination);
+
+      noise.start(t0);
+      noise.stop(t0 + dur + 0.02);
+      osc.start(t0);
+      osc.stop(t0 + 0.03);
+    }
+
+    function clacksN(){
+      ensureAudio();
+      if (!audioCtx || audioCtx.state !== "running") return;
+      const t0 = audioCtx.currentTime + 0.01;
+      const interval = settings.clapInterval;
+      const count = settings.clapCount;
+      for (let i=0;i<count;i++){
+        clampClick(t0 + i * interval);
+      }
+    }
+
+    // ---------- State ----------
+    const state = {
+      workMs: 5 * 60 * 1000,
+      restMs: 30 * 1000,
+      totalRounds: 8,
+      workInfinite: false,
+      roundsInfinite: false,
+
+      // Start Warn -> REST, End Warn -> WORK
+      startWarnEnabled: false,
+      endWarnEnabled: false,
+      startWarnMs: 10 * 1000,
+      endWarnMs: 10 * 1000,
+
+      phase: "work",
+      running: false,
+      paused: false,
+      currentRound: 1,
+      remainingWorkMs: 5 * 60 * 1000,
+      remainingRestMs: 30 * 1000,
+      workElapsedSec: 0,
+
+      buzzedZeroThisPhase: false,
+      firedStartWarnThisPhase: false,
+      firedEndWarnThisPhase: false,
+
+      keypadOpen: false,
+      keypadTarget: null,
+      keypadDigits: "",
+
+      settingsOpen: false
+    };
+
+    // ---------- Presets ----------
+    const PRESET_KEY = "hiit_presets_v5";
+    const PRESET_COUNT = 5;
+    const defaultPresets = Array.from({length: PRESET_COUNT}, () => ({
+      workMs: 0, restMs: 0, rounds: 0, roundsInfinite:false, workInfinite:false
+    }));
+
+    function loadPresets(){
+      try{
+        const raw = localStorage.getItem(PRESET_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(defaultPresets));
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr) || arr.length !== PRESET_COUNT) return JSON.parse(JSON.stringify(defaultPresets));
+        return arr.map(p => ({
+          workMs: typeof p.workMs === "number" ? p.workMs : 0,
+          restMs: typeof p.restMs === "number" ? p.restMs : 0,
+          rounds: typeof p.rounds === "number" ? p.rounds : 0,
+          roundsInfinite: !!p.roundsInfinite,
+          workInfinite: !!p.workInfinite
+        }));
+      }catch{
+        return JSON.parse(JSON.stringify(defaultPresets));
+      }
+    }
+    function savePresets(p){ localStorage.setItem(PRESET_KEY, JSON.stringify(p)); }
+    let presets = loadPresets();
+
+    // ---------- Elements ----------
+    const contentEl = document.querySelector(".content");
+    const workDisplay = document.getElementById("workDisplay");
+    const restDisplay = document.getElementById("restDisplay");
+    const roundDisplay = document.getElementById("roundDisplay");
+    const roundTotalDisplay = document.getElementById("roundTotalDisplay");
+    const phasePill = document.getElementById("phasePill");
+
+    const btnStart = document.getElementById("btnStart");
+    const btnPause = document.getElementById("btnPause");
+    const btnReset = document.getElementById("btnReset");
+
+    const setWork = document.getElementById("setWork");
+    const setRest  = document.getElementById("setRest");
+    const setRounds= document.getElementById("setRounds");
+
+    const btnStartWarn = document.getElementById("btnStartWarn");
+    const btnEndWarn = document.getElementById("btnEndWarn");
+    const toggleStartWarn = document.getElementById("toggleStartWarn");
+    const toggleEndWarn = document.getElementById("toggleEndWarn");
+
+    const warningsBlock = document.getElementById("warningsBlock");
+    const presetsBlock = document.getElementById("presetsBlock");
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalHint = document.getElementById("modalHint");
+    const entryValue = document.getElementById("entryValue");
+    const currentConfig = document.getElementById("currentConfig");
+    const pad = document.getElementById("pad");
+
+    const openSettingsBtn = document.getElementById("openSettings");
+    const settingsBackdrop = document.getElementById("settingsBackdrop");
+    const closeSettingsBtn = document.getElementById("closeSettings");
+
+    const toggleWarnVisible = document.getElementById("toggleWarnVisible");
+    const warnVisibleVal = document.getElementById("warnVisibleVal");
+
+    const togglePresetsVisible = document.getElementById("togglePresetsVisible");
+    const presetsVisibleVal = document.getElementById("presetsVisibleVal");
+
+    const testClack = document.getElementById("testClack");
+    const testBuzz = document.getElementById("testBuzz");
+
+    const clapVol = document.getElementById("clapVol");
+    const clapVolVal = document.getElementById("clapVolVal");
+    const clapInterval = document.getElementById("clapInterval");
+    const clapIntervalVal = document.getElementById("clapIntervalVal");
+
+    const buzzVol = document.getElementById("buzzVol");
+    const buzzVolVal = document.getElementById("buzzVolVal");
+    const buzzDur = document.getElementById("buzzDur");
+    const buzzDurVal = document.getElementById("buzzDurVal");
+
+    const toast = document.getElementById("toast");
+    const presetBtns = [
+      { btn: document.getElementById("preset1"), label: document.getElementById("preset1Label"), meta: document.getElementById("preset1Meta") },
+      { btn: document.getElementById("preset2"), label: document.getElementById("preset2Label"), meta: document.getElementById("preset2Meta") },
+      { btn: document.getElementById("preset3"), label: document.getElementById("preset3Label"), meta: document.getElementById("preset3Meta") },
+      { btn: document.getElementById("preset4"), label: document.getElementById("preset4Label"), meta: document.getElementById("preset4Meta") },
+      { btn: document.getElementById("preset5"), label: document.getElementById("preset5Label"), meta: document.getElementById("preset5Meta") }
+    ];
+
+    // ---------- Toast ----------
+    let toastTimer = null;
+    function showToast(text){
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>toast.classList.remove("show"), 900);
+    }
+
+    // ---------- Reset ----------
+    function resetPhaseGuards(){
+      state.buzzedZeroThisPhase = false;
+      state.firedStartWarnThisPhase = false;
+      state.firedEndWarnThisPhase = false;
+    }
+    function resetRunState(){
+      state.phase = "work";
+      state.currentRound = 1;
+      state.running = false;
+      state.paused = false;
+
+      state.workElapsedSec = 0;
+      state.remainingWorkMs = state.workMs;
+      state.remainingRestMs = state.restMs;
+
+      resetPhaseGuards();
+    }
+
+    // ---------- Warnings ----------
+    function maybeFireWorkWarning(beforeMs, afterMs){
+      if (!state.endWarnEnabled || state.firedEndWarnThisPhase || state.endWarnMs <= 0) return;
+      if (beforeMs > state.endWarnMs && afterMs <= state.endWarnMs){
+        state.firedEndWarnThisPhase = true;
+        clacksN();
+      }
+    }
+    function maybeFireRestWarning(beforeMs, afterMs){
+      if (!state.startWarnEnabled || state.firedStartWarnThisPhase || state.startWarnMs <= 0) return;
+      if (beforeMs > state.startWarnMs && afterMs <= state.startWarnMs){
+        state.firedStartWarnThisPhase = true;
+        clacksN();
+      }
+    }
+    function checkImmediatePhaseWarnings(){
+      if (state.workInfinite) return;
+      if (state.phase === "work"){
+        if (state.endWarnEnabled && !state.firedEndWarnThisPhase && state.endWarnMs > 0 && state.endWarnMs >= state.remainingWorkMs){
+          state.firedEndWarnThisPhase = true;
+          clacksN();
+        }
+      } else {
+        if (state.startWarnEnabled && !state.firedStartWarnThisPhase && state.startWarnMs > 0 && state.startWarnMs >= state.remainingRestMs){
+          state.firedStartWarnThisPhase = true;
+          clacksN();
+        }
+      }
+    }
+
+    // ---------- Keypad ----------
+    function renderKeypad(){
+      if (!state.keypadOpen) return;
+      const show = (ms) => fmtMMSS_Countdown(ms);
+
+      if (state.keypadTarget === "work"){
+        modalTitle.textContent = "SET WORK";
+        modalHint.textContent = "Enter MMSS or tap Infinite";
+        currentConfig.textContent = "Current: " + (state.workInfinite ? "∞" : show(state.workMs));
+        const base = state.keypadDigits || msToMMSSDigits(state.workMs);
+        entryValue.textContent = state.workInfinite ? "∞" : show(mmssDigitsToMs(base));
+      } else if (state.keypadTarget === "rest"){
+        modalTitle.textContent = "SET REST";
+        modalHint.textContent = "Enter MMSS";
+        currentConfig.textContent = "Current: " + show(state.restMs);
+        const base = state.keypadDigits || msToMMSSDigits(state.restMs);
+        entryValue.textContent = show(mmssDigitsToMs(base));
+      } else if (state.keypadTarget === "rounds"){
+        modalTitle.textContent = "SET ROUNDS";
+        modalHint.textContent = "Enter 1–99 or tap Infinite";
+        currentConfig.textContent = "Current: " + (state.roundsInfinite ? "∞" : state.totalRounds);
+        entryValue.textContent = state.roundsInfinite ? "∞" : (state.keypadDigits.length ? state.keypadDigits : String(state.totalRounds));
+      } else if (state.keypadTarget === "startWarn"){
+        modalTitle.textContent = "START WARN (REST)";
+        modalHint.textContent = "Clacks when REST remaining hits this";
+        currentConfig.textContent = "Current: " + show(state.startWarnMs);
+        const base = state.keypadDigits || msToMMSSDigits(state.startWarnMs);
+        entryValue.textContent = show(mmssDigitsToMs(base));
+      } else if (state.keypadTarget === "endWarn"){
+        modalTitle.textContent = "END WARN (WORK)";
+        modalHint.textContent = "Clacks when WORK remaining hits this";
+        currentConfig.textContent = "Current: " + show(state.endWarnMs);
+        const base = state.keypadDigits || msToMMSSDigits(state.endWarnMs);
+        entryValue.textContent = show(mmssDigitsToMs(base));
+      }
+    }
+
+    function openKeypad(target){
+      state.keypadOpen = true;
+      state.keypadTarget = target;
+      state.keypadDigits = "";
+      renderKeypad();
+      render();
+    }
+    function closeKeypad(){
+      state.keypadOpen = false;
+      state.keypadTarget = null;
+      state.keypadDigits = "";
+      render();
+    }
+
+    function applyKeypad(){
+      const target = state.keypadTarget;
+
+      if (target === "work"){
+        if (!state.workInfinite){
+          const ms = mmssDigitsToMs(state.keypadDigits || msToMMSSDigits(state.workMs));
+          state.workMs = clamp(ms, 1000, (99*60 + 59) * 1000);
+        }
+      } else if (target === "rest"){
+        const ms = mmssDigitsToMs(state.keypadDigits || msToMMSSDigits(state.restMs));
+        state.restMs = clamp(ms, 0, (99*60 + 59) * 1000);
+      } else if (target === "rounds"){
+        if (!state.roundsInfinite){
+          const n = parseInt(state.keypadDigits || String(state.totalRounds), 10);
+          state.totalRounds = clamp(isNaN(n) ? state.totalRounds : n, 1, 99);
+        }
+      } else if (target === "startWarn"){
+        const ms = mmssDigitsToMs(state.keypadDigits || msToMMSSDigits(state.startWarnMs));
+        state.startWarnMs = clamp(ms, 0, (99*60 + 59) * 1000);
+      } else if (target === "endWarn"){
+        const ms = mmssDigitsToMs(state.keypadDigits || msToMMSSDigits(state.endWarnMs));
+        state.endWarnMs = clamp(ms, 0, (99*60 + 59) * 1000);
+      }
+
+      resetRunState();
+      closeKeypad();
+    }
+
+    function keypadPushDigit(d){
+      if (state.keypadTarget === "work" && state.workInfinite) state.workInfinite = false;
+      if (state.keypadTarget === "rounds" && state.roundsInfinite) state.roundsInfinite = false;
+
+      if (state.keypadTarget === "rounds"){
+        state.keypadDigits = (state.keypadDigits + d).slice(0, 2);
+      } else {
+        state.keypadDigits = (state.keypadDigits + d).slice(-4);
+      }
+      renderKeypad();
+      render();
+    }
+
+    function keypadClear(){
+      if (state.keypadTarget === "rounds"){
+        state.keypadDigits = "";
+      } else {
+        state.keypadDigits = "0000";
+      }
+      renderKeypad();
+      render();
+    }
+
+    function keypadInfinite(){
+      if (state.keypadTarget === "work"){
+        state.workInfinite = !state.workInfinite;
+        state.keypadDigits = "";
+      } else if (state.keypadTarget === "rounds"){
+        state.roundsInfinite = !state.roundsInfinite;
+        state.keypadDigits = "";
+      }
+      renderKeypad();
+      render();
+    }
+
+    // ---------- Render ----------
+    function renderPresets(){
+      for (let i=0;i<PRESET_COUNT;i++){
+        const p = presets[i];
+        if (!p || (!p.workInfinite && (!p.workMs || p.workMs <= 0))){
+          presetBtns[i].label.textContent = "--:--";
+          presetBtns[i].meta.textContent = "hold to save";
+          continue;
+        }
+        const wLabel = p.workInfinite ? "∞" : fmtMMSS_Countdown(p.workMs);
+        presetBtns[i].label.textContent = wLabel;
+        const r = fmtMMSS_Countdown(p.restMs || 0);
+        const rounds = p.roundsInfinite ? "∞" : String(p.rounds || 0);
+        presetBtns[i].meta.textContent = `rest ${r} • rounds ${rounds}`;
+      }
+    }
+
+    function syncSettingsUI(){
+      clapVol.value = String(settings.clapVolume);
+      clapVolVal.textContent = settings.clapVolume.toFixed(2);
+
+      clapInterval.value = String(settings.clapInterval);
+      clapIntervalVal.textContent = settings.clapInterval.toFixed(2) + "s";
+
+      buzzVol.value = String(settings.buzzVolume);
+      buzzVolVal.textContent = settings.buzzVolume.toFixed(2);
+
+      buzzDur.value = String(settings.buzzDurationMs);
+      buzzDurVal.textContent = String(Math.round(settings.buzzDurationMs)) + "ms";
+
+      toggleWarnVisible.classList.toggle("on", settings.showWarnings);
+      warnVisibleVal.textContent = settings.showWarnings ? "ON" : "OFF";
+
+      togglePresetsVisible.classList.toggle("on", settings.showPresets);
+      presetsVisibleVal.textContent = settings.showPresets ? "ON" : "OFF";
+    }
+
+    function render(){
+      // show/hide blocks
+      warningsBlock.classList.toggle("hidden", !settings.showWarnings);
+      presetsBlock.classList.toggle("hidden", !settings.showPresets);
+
+      // Full width mode when both hidden
+      const showLeft = settings.showWarnings || settings.showPresets;
+      contentEl.classList.toggle("fullWidth", !showLeft);
+
+      // timers
+      workDisplay.textContent = state.workInfinite
+        ? fmtMMSS_FromSeconds(state.workElapsedSec)
+        : fmtMMSS_Countdown(state.remainingWorkMs);
+
+      restDisplay.textContent = fmtMMSS_Countdown(state.remainingRestMs);
+      restDisplay.classList.toggle("dim", state.workInfinite);
+
+      const strikeRounds = state.workInfinite;
+      document.getElementById("roundLabel").classList.toggle("struck", strikeRounds);
+      document.getElementById("slashLabel").classList.toggle("struck", strikeRounds);
+      roundDisplay.classList.toggle("struck", strikeRounds);
+      roundTotalDisplay.classList.toggle("struck", strikeRounds);
+
+      roundDisplay.textContent = String(state.currentRound);
+      roundTotalDisplay.textContent = state.roundsInfinite ? "∞" : String(state.totalRounds);
+
+      phasePill.classList.remove("work","rest","paused","inf");
+      if (state.paused){
+        phasePill.classList.add("paused");
+        phasePill.textContent = "PAUSED";
+      } else if (state.workInfinite){
+        phasePill.classList.add("inf");
+        phasePill.textContent = "INFINITE";
+      } else {
+        phasePill.classList.add(state.phase === "work" ? "work" : "rest");
+        phasePill.textContent = state.phase === "work" ? "WORK" : "REST";
+      }
+
+      btnStart.disabled = state.running && !state.paused;
+      btnPause.textContent = state.paused ? "Resume" : "Pause";
+
+      toggleStartWarn.classList.toggle("on", state.startWarnEnabled);
+      toggleEndWarn.classList.toggle("on", state.endWarnEnabled);
+
+      modalBackdrop.classList.toggle("show", state.keypadOpen);
+      settingsBackdrop.classList.toggle("show", state.settingsOpen);
+
+      if (state.keypadOpen) renderKeypad();
+    }
+
+    // ---------- Engine ----------
+    let lastTick = 0;
+    function loop(ts){
+      if (!lastTick) lastTick = ts;
+      const dtMs = ts - lastTick;
+      lastTick = ts;
+
+      if (state.running && !state.paused){
+        step(dtMs);
+      }
+      requestAnimationFrame(loop);
+    }
+
+    function step(dtMs){
+      if (state.workInfinite){
+        state.workElapsedSec += dtMs / 1000;
+        render();
+        return;
+      }
+
+      if (state.phase === "work"){
+        const before = state.remainingWorkMs;
+        const after = Math.max(0, before - dtMs);
+        state.remainingWorkMs = after;
+
+        maybeFireWorkWarning(before, after);
+
+        if (!state.buzzedZeroThisPhase && after === 0){
+          state.buzzedZeroThisPhase = true;
+          buzzer({freqHz:500});
+        }
+
+        if (after === 0){
+          state.phase = "rest";
+          state.remainingRestMs = state.restMs;
+          resetPhaseGuards();
+          checkImmediatePhaseWarnings();
+        }
+      } else {
+        const before = state.remainingRestMs;
+        const after = Math.max(0, before - dtMs);
+        state.remainingRestMs = after;
+
+        maybeFireRestWarning(before, after);
+
+        if (!state.buzzedZeroThisPhase && after === 0){
+          state.buzzedZeroThisPhase = true;
+          buzzer({freqHz:500});
+        }
+
+        if (after === 0){
+          state.currentRound++;
+
+          if (!state.roundsInfinite && state.currentRound > state.totalRounds){
+            resetRunState();
+            render();
+            return;
+          }
+
+          state.phase = "work";
+          state.remainingWorkMs = state.workMs;
+          resetPhaseGuards();
+          checkImmediatePhaseWarnings();
+        }
+      }
+
+      render();
+    }
+
+    // ---------- Controls ----------
+    btnStart.addEventListener("click", () => {
+      userTapAudioPrime();
+      if (!state.running){
+        state.running = true;
+        state.paused = false;
+        checkImmediatePhaseWarnings();
+      } else {
+        state.paused = false;
+      }
+      render();
+    });
+
+    btnPause.addEventListener("click", () => {
+      userTapAudioPrime();
+      if (!state.running) return;
+      state.paused = !state.paused;
+      render();
+    });
+
+    btnReset.addEventListener("click", () => {
+      userTapAudioPrime();
+      resetRunState();
+      render();
+    });
+
+    toggleStartWarn.addEventListener("click", () => { userTapAudioPrime(); state.startWarnEnabled = !state.startWarnEnabled; render(); });
+    toggleEndWarn.addEventListener("click",   () => { userTapAudioPrime(); state.endWarnEnabled = !state.endWarnEnabled; render(); });
+
+    setWork.addEventListener("click", () => { userTapAudioPrime(); openKeypad("work"); });
+    setRest.addEventListener("click",  () => { userTapAudioPrime(); openKeypad("rest"); });
+    setRounds.addEventListener("click",() => { userTapAudioPrime(); openKeypad("rounds"); });
+
+    btnStartWarn.addEventListener("click", () => { userTapAudioPrime(); openKeypad("startWarn"); });
+    btnEndWarn.addEventListener("click",   () => { userTapAudioPrime(); openKeypad("endWarn"); });
+
+    pad.addEventListener("click", (e) => {
+      userTapAudioPrime();
+      const btn = e.target.closest("button[data-k]");
+      if (!btn) return;
+      const k = btn.getAttribute("data-k");
+      if (/^\d$/.test(k)) keypadPushDigit(k);
+      else if (k === "clear") keypadClear();
+      else if (k === "infinite") keypadInfinite();
+      else if (k === "cancel") closeKeypad();
+      else if (k === "enter") applyKeypad();
+    });
+
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeKeypad();
+    });
+
+    // ---------- Settings ----------
+    clapVol.addEventListener("input", () => {
+      settings.clapVolume = clamp(parseFloat(clapVol.value), 0, 3);
+      clapVolVal.textContent = settings.clapVolume.toFixed(2);
+      saveSettings();
+    });
+    clapInterval.addEventListener("input", () => {
+      settings.clapInterval = clamp(parseFloat(clapInterval.value), 0.03, 0.25);
+      clapIntervalVal.textContent = settings.clapInterval.toFixed(2) + "s";
+      saveSettings();
+    });
+    buzzVol.addEventListener("input", () => {
+      settings.buzzVolume = clamp(parseFloat(buzzVol.value), 0, 1);
+      buzzVolVal.textContent = settings.buzzVolume.toFixed(2);
+      saveSettings();
+    });
+    buzzDur.addEventListener("input", () => {
+      settings.buzzDurationMs = clamp(parseFloat(buzzDur.value), 100, 1500);
+      buzzDurVal.textContent = String(Math.round(settings.buzzDurationMs)) + "ms";
+      saveSettings();
+    });
+
+    toggleWarnVisible.addEventListener("click", () => {
+      userTapAudioPrime();
+      settings.showWarnings = !settings.showWarnings;
+      saveSettings();
+      syncSettingsUI();
+      render();
+    });
+
+    togglePresetsVisible.addEventListener("click", () => {
+      userTapAudioPrime();
+      settings.showPresets = !settings.showPresets;
+      saveSettings();
+      syncSettingsUI();
+      render();
+    });
+
+    testClack.addEventListener("click", () => { userTapAudioPrime(); clacksN(); });
+    testBuzz.addEventListener("click", () => { userTapAudioPrime(); buzzer({freqHz:500}); });
+
+    openSettingsBtn.addEventListener("click", () => {
+      userTapAudioPrime();
+      state.settingsOpen = true;
+      syncSettingsUI();
+      render();
+    });
+    closeSettingsBtn.addEventListener("click", () => {
+      userTapAudioPrime();
+      state.settingsOpen = false;
+      saveSettings();
+      render();
+    });
+    settingsBackdrop.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget){
+        state.settingsOpen = false;
+        saveSettings();
+        render();
+      }
+    });
+
+    // ---------- Presets ----------
+    const LONG_PRESS_MS = 650;
+
+    function applyPreset(p){
+      if (!p) return;
+
+      state.workInfinite = !!p.workInfinite;
+      state.roundsInfinite = !!p.roundsInfinite;
+
+      if (!state.workInfinite){
+        if (!p.workMs || p.workMs <= 0) return;
+        state.workMs = clamp(p.workMs, 1000, (99*60 + 59) * 1000);
+      }
+      state.restMs = clamp(p.restMs || 0, 0, (99*60 + 59) * 1000);
+
+      if (!state.roundsInfinite){
+        state.totalRounds = clamp(p.rounds || 1, 1, 99);
+      }
+
+      resetRunState();
+      render();
+      showToast("Preset Loaded");
+    }
+
+    function savePresetAt(idx){
+      presets[idx] = {
+        workInfinite: !!state.workInfinite,
+        roundsInfinite: !!state.roundsInfinite,
+        workMs: state.workMs,
+        restMs: state.restMs,
+        rounds: state.totalRounds
+      };
+      savePresets(presets);
+      renderPresets();
+      showToast("Preset Saved");
+    }
+
+    function bindPreset(idx){
+      const el = presetBtns[idx].btn;
+      let pressTimer = null;
+      let longPressed = false;
+      let sx=0, sy=0;
+
+      const clearPress = () => {
+        if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+      };
+
+      const onDown = (x,y) => {
+        userTapAudioPrime();
+        longPressed = false;
+        sx=x; sy=y;
+        clearPress();
+        pressTimer = setTimeout(() => {
+          longPressed = true;
+          savePresetAt(idx);
+        }, LONG_PRESS_MS);
+      };
+
+      const movedTooFar = (x,y) => {
+        const dx=x-sx, dy=y-sy;
+        return (dx*dx + dy*dy) > (14*14);
+      };
+
+      el.addEventListener("pointerdown", (e) => {
+        el.setPointerCapture?.(e.pointerId);
+        onDown(e.clientX, e.clientY);
+      });
+      el.addEventListener("pointermove", (e) => {
+        if (pressTimer && movedTooFar(e.clientX, e.clientY)) clearPress();
+      });
+      el.addEventListener("pointerup", () => {
+        clearPress();
+        if (!longPressed) applyPreset(presets[idx]);
+      });
+      el.addEventListener("pointercancel", clearPress);
+      el.addEventListener("contextmenu", (e)=>e.preventDefault());
+    }
+
+    // ---------- Init ----------
+    function resetAndRenderAll(){
+      resetRunState();
+      renderPresets();
+      syncSettingsUI();
+      render();
+    }
+
+    presets = loadPresets();
+    resetAndRenderAll();
+    for (let i=0;i<PRESET_COUNT;i++) bindPreset(i);
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
