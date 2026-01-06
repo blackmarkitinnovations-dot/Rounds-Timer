@@ -934,31 +934,36 @@ header{
       height: 18px;
     }
 
+    
     /* Side tab drawers (Warnings / Presets) */
     .content{
       position: relative;
       grid-template-columns: 1fr; /* main panel always full width; drawers overlay */
     }
+
+    /* Dock sits on the left edge of the content area */
     .sideDock{
-      position:absolute;
+      position: absolute;
       left: 0;
       top: 0;
       bottom: 0;
-      z-index: 20;
-      display:flex;
-      flex-direction:column;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
       gap: 10px;
-      padding: 10px 0 10px calc(0px + var(--sal));
-      pointer-events: none;
+      padding: 10px 0 10px 0;
+      pointer-events: none; /* drawers re-enable */
     }
 
     .drawer{
-      --tabw: 42px;
-      width: min(320px, 85vw);
+      --tabw: 44px;
+      width: min(340px, 86vw);
       max-height: 100%;
-      display:flex;
+      display: flex;
+      align-items: stretch;
       pointer-events: auto;
-      transform: translateX(calc(-100% + var(--tabw)));
+      /* closed state: only the tab remains visible */
+      transform: translateX(calc(-1 * (100% - var(--tabw))));
       transition: transform .22s ease;
       filter: drop-shadow(0 14px 30px rgba(0,0,0,.45));
     }
@@ -966,46 +971,66 @@ header{
 
     .tabBtn{
       width: var(--tabw);
-      border: 1px solid rgba(255,255,255,.14);
+      flex: 0 0 var(--tabw);
+      border: 1px solid rgba(255,255,255,.16);
       border-right: none;
-      background: rgba(0,0,0,.30);
+      background: rgba(0,0,0,.32);
       color: var(--text);
       font-weight: 900;
       letter-spacing: .10em;
       text-transform: uppercase;
-      border-radius: 14px 0 0 14px;
-      padding: 10px 0;
+      border-radius: 16px 0 0 16px;
+      padding: 12px 0;
       cursor: pointer;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
       writing-mode: vertical-rl;
       transform: rotate(180deg);
       font-size: 12px;
     }
-    .tabBtn:active{ transform: rotate(180deg) translateY(1px); filter: brightness(.95); }
+    .tabBtn:active{ filter: brightness(.95); }
 
     .drawerPanel{
-      flex:1;
+      flex: 1 1 auto;
       min-width: 0;
       border: 1px solid var(--stroke2);
       border-left: none;
       border-radius: 0 18px 18px 0;
-      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
-      overflow: hidden;
-      display:flex;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      overflow: hidden;           /* keep panel clipped */
+      display: flex;
+      min-height: 0;
     }
 
+    /* Make the embedded blocks fill the drawer and scroll internally */
     .drawerPanel .block{
+      margin: 0;
       border: none;
       border-radius: 0;
       background: transparent;
-      flex:1;
-      min-height:0;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .drawerPanel .blockBody{
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      min-height: 0;
     }
 
+    /* Closed drawer: prevent the hidden panel from stealing taps */
     .drawer:not(.open) .drawerPanel{ pointer-events: none; }
 
+    /* Hide an entire drawer when disabled by settings */
+    .drawer.hidden{ display: none !important; }
+
     @media (orientation: landscape) and (max-width: 950px){
-      .drawer{ --tabw: 38px; width: min(300px, 80vw); }
+      .drawer{ --tabw: 40px; width: min(320px, 84vw); }
+      .tabBtn{ font-size: 11px; }
+      .sideDock{ gap: 8px; padding-top: 6px; padding-bottom: 6px; }
+    }
+
       .tabBtn{ font-size: 11px; }
       .sideDock{ gap: 8px; padding-top: 6px; padding-bottom: 6px; }
     }
