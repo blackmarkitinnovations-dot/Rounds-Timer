@@ -9,963 +9,817 @@
   <title>Timer</title>
 
   <style>
-    :root{
-      --bg:#0b0c0f;
-      --stroke:#242733;
-      --stroke2:#2f3444;
-      --text:#e9edf7;
-      --muted:#a9b2c7;
-      --red:#ff2b2b;
-      --yellow:#ffd400;
-      --green:#28d17c;
-      --orange:#ff9a2a;
-      --shadow: 0 16px 48px rgba(0,0,0,.45);
-      --card: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
-      --card2: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+/* =========================================================
+   TIMER UI (clean baseline)
+   - Keep edits in :root + the "EDIT HERE" blocks.
+   ========================================================= */
 
-      /* iOS safe area */
-      --sat: env(safe-area-inset-top);
-      --sar: env(safe-area-inset-right);
-      --sab: env(safe-area-inset-bottom);
-      --sal: env(safe-area-inset-left);
-      --tabw: 44px;
-      --tabgap: 12px;
-    }
+/* ============ EDIT HERE: Theme ============ */
+:root{
+  --bg:#0b0c0f;
+  --stroke:#242733;
+  --stroke2:#2f3444;
+  --text:#e9edf7;
+  --muted:#a9b2c7;
+  --red:#ff2b2b;
+  --yellow:#ffd400;
+  --green:#28d17c;
+  --orange:#ff9a2a;
+  --shadow: 0 16px 48px rgba(0,0,0,.45);
+  --card: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+  --card2: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
 
-    *{ box-sizing:border-box; }
-    html, body{
-      height:100%;
-      padding:0;
-      overflow: hidden;
-    }
+  /* iOS safe area */
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+}
 
-    /* iOS Safari: keep app pinned to the *visible* viewport so toolbars don't cover UI */
-    body{
-      position: fixed;
-      inset: 0;
+/* ============ Base ============ */
+*{ box-sizing:border-box; }
+html, body{ height:100%; padding:0; overflow:hidden; }
 
-      margin:0;
-      background: radial-gradient(1200px 600px at 50% 0%, #171a23 0%, var(--bg) 55%, #06070a 100%);
-      color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      overflow:hidden;
-      display:flex;
-      align-items:stretch;
-      justify-content:stretch;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
+body{
+  position: fixed;
+  inset: 0;
+  margin:0;
+  background: radial-gradient(1200px 600px at 50% 0%, #171a23 0%, var(--bg) 55%, #06070a 100%);
+  color:var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  overflow:hidden;
+  display:flex;
+  align-items:stretch;
+  justify-content:stretch;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 
-    /* APP becomes responsive: full screen on phone, framed on desktop */
-    .app{
-      max-width: 100vw;
+/* ============ App Shell ============ */
+.app{
+  max-width: 100vw;
+  height: var(--apph, min(800px, 100vh));
+  width: min(1280px, 100vw);
+  margin: auto;
+  border:1px solid var(--stroke);
+  border-radius:24px;
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  background: var(--card);
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
 
-      height: var(--apph, min(800px, 100vh));
-      width: min(1280px, 100vw);
-      margin: auto;
-      border:1px solid var(--stroke);
-      border-radius:24px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      background: var(--card);
-      display:flex;
-      flex-direction:column;
-      position:relative;
-    }
+/* On small screens: remove frame */
+@media (max-width: 720px), (max-height: 720px){
+  .app{
+    width:100vw;
+    height: var(--apph, 100dvh);
+    max-height: var(--apph, 100dvh);
+    border-radius:0;
+    border:none;
+    box-shadow:none;
+    margin:0;
+  }
+}
 
-    /* On small screens, remove frame + radius so it fits perfectly */
-    @media (max-width: 720px), (max-height: 720px){
-      .app{
-        width:100vw;
-
-        /* Fit the visual viewport on mobile (prevents clipping under browser bars) */
-        height: var(--apph, 100dvh);
-        max-height: var(--apph, 100dvh);
-
-        border-radius:0;
-        border:none;
-        box-shadow:none;
-        margin:0;
-      }
-    }
+/* ============ Header ============ */
 header{
-      height: clamp(52px, 8vh, 64px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-bottom:1px solid var(--stroke);
-      background: var(--card2);
-      letter-spacing:.20em;
-      font-weight:900;
-      text-transform:uppercase;
-      color:#dfe6ff;
-      font-size: clamp(14px, 2.2vw, 20px);
-      flex:0 0 auto;
-      position:relative;
-      padding-top: var(--sat);
-      padding-left: var(--sal);
-      padding-right: var(--sar);
-    }
+  height: clamp(52px, 8vh, 64px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-bottom:1px solid var(--stroke);
+  background: var(--card2);
+  letter-spacing:.20em;
+  font-weight:900;
+  text-transform:uppercase;
+  color:#dfe6ff;
+  font-size: clamp(14px, 2.2vw, 20px);
+  flex:0 0 auto;
+  position:relative;
+  padding-top: var(--sat);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+}
 
-    .settingsBtn{
-      position:absolute;
-      left: calc(10px + var(--sal));
-      top: calc(10px + var(--sat));
-      width: clamp(36px, 6vw, 44px);
-      height: clamp(36px, 6vw, 44px);
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      user-select:none;
-    }
-    .settingsBtn:active{ transform: translateY(1px); filter: brightness(.95); }
-    .settingsBtn svg{ width: clamp(18px, 3.5vw, 22px); height: clamp(18px, 3.5vw, 22px); opacity:.92; }
-
-    .topControls{
-      height: clamp(64px, 10vh, 78px);
-      flex:0 0 auto;
-      border-bottom:1px solid var(--stroke);
-      padding: clamp(10px, 1.6vw, 12px) clamp(10px, 1.8vw, 14px);
-      display:flex;
-      gap: clamp(8px, 1.4vw, 12px);
-      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal) + var(--tabw) + var(--tabgap));
-      padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
-    }
-
-    .btnRow{
-      flex:1;
-      padding: clamp(12px, 2.2vh, 16px) clamp(10px, 1.8vw, 14px);
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
-      color:var(--text);
-      font-weight:900;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      cursor:pointer;
-      user-select:none;
-      font-size: clamp(13px, 2.2vw, 16px);
-      transition: transform .06s ease, filter .15s ease;
-      min-width: 0;
-    }
-    .btnRow:active{ transform: translateY(1px); filter:brightness(.95); }
-    .btnRow:disabled{ opacity:.45; cursor:not-allowed; }
-    .btnRow.green{ background: linear-gradient(180deg, rgba(40,209,124,.95), rgba(18,80,55,.65)); border-color: rgba(40,209,124,.35); }
-    .btnRow.orange{ background: linear-gradient(180deg, rgba(255,154,42,.95), rgba(94,54,15,.65)); border-color: rgba(255,154,42,.35); }
-    .btnRow.red{ background: linear-gradient(180deg, rgba(255,43,43,.95), rgba(95,18,18,.65)); border-color: rgba(255,43,43,.35); }
-
-    .content{
-      position:relative;
-      flex: 1 1 auto;
-      min-height:0;
-      display:grid;
-      grid-template-columns: minmax(240px, 320px) 1fr;
-      gap: clamp(10px, 1.4vw, 14px);
-      padding: clamp(10px, 1.4vw, 14px);
-      overflow-y:auto;
-      overflow-x:hidden;
-      -webkit-overflow-scrolling: touch;
-      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal) + var(--tabw) + var(--tabgap));
-      padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
-    }
+.settingsBtn{
+  position:absolute;
+  left: calc(10px + var(--sal));
+  top: calc(10px + var(--sat));
+  width: clamp(36px, 6vw, 44px);
+  height: clamp(36px, 6vw, 44px);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.22);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+}
+.settingsBtn:active{ transform: translateY(1px); filter: brightness(.95); }
+.settingsBtn svg{ width: clamp(18px, 3.5vw, 22px); height: clamp(18px, 3.5vw, 22px); opacity:.92; }
 
 
-    /* Left side folder-style tabs (Warnings / Presets) */
-    .sideTabs{
-      position:absolute;
-      left: calc(clamp(10px, 1.4vw, 14px) + var(--sal));
-      top: clamp(96px, 16vh, 140px);
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-      z-index: 25;
-      pointer-events:auto;
-    }
-    .sideTab{
-      width: var(--tabw);
-      height: 150px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      color: rgba(233,237,247,.92);
-      font-weight: 900;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      cursor:pointer;
-      user-select:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg); /* read bottom-to-top like a folder tab */
-      box-shadow: 0 10px 22px rgba(0,0,0,.28);
-    }
-    .sideTab:active{ transform: rotate(180deg) translateY(1px); filter: brightness(.95); }
-    .sideTab.on{
-      background: linear-gradient(180deg, rgba(140,170,255,.26), rgba(255,255,255,.02));
-      border-color: rgba(140,170,255,.35);
-      color: #ffffff;
-    }
 
-    @media (max-width: 780px){
-      .sideTabs{ top: 88px; gap: 10px; }
-      .sideTab{ height: 120px; }
-    }
+/* Header icon group (Settings / Warnings / Presets) */
+.headerIcons{
+  position:absolute;
+  left: calc(10px + var(--sal));
+  top: calc(10px + var(--sat));
+  display:flex;
+  gap:8px;
+  z-index: 3;
+}
+.iconBtn{
+  width: clamp(36px, 6vw, 44px);
+  height: clamp(36px, 6vw, 44px);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.22);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+}
+.iconBtn:active{ transform: translateY(1px); filter: brightness(.95); }
+.iconBtn svg{ width: clamp(18px, 3.5vw, 22px); height: clamp(18px, 3.5vw, 22px); opacity:.92; }
+.iconBtn.active{
+  background: rgba(40,209,124,.18);
+  border-color: rgba(40,209,124,.35);
+}
 
-    
-    @media (orientation: landscape) and (max-width: 950px){
-      /* keep room for side tabs even when other rules set padding shorthand */
-      .content{
-        padding-top: 6px !important;
-        padding-right: calc(6px + var(--sar)) !important;
-        padding-bottom: 6px !important;
-        padding-left: calc(6px + var(--sal) + var(--tabw) + var(--tabgap)) !important;
-      }
-    }
-
-/* FULL WIDTH MODE (fixes your “shift left” issue) */
-    .content.fullWidth{
-      grid-template-columns: 1fr;
-      gap: 0;
-    }
-    .content.fullWidth .leftCol{ display:none; }
-    .content.fullWidth .mainPanel{ width:100%; }
-
-    .leftCol{
-      display:flex;
-      flex-direction:column;
-      gap: clamp(10px, 1.2vw, 12px);
-      min-height:0;
-      overflow:hidden;
-    }
-
-    .block{
-      border:1px solid var(--stroke2);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
-    }
-    .blockHeader{
-      padding: 12px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      font-weight:900;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      font-size: 12px;
-      color:var(--muted);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-    }
-    .blockBody{
-      padding: 12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:0;
-      overflow:auto;
-    }
-
-    .btn{
-      border:1px solid rgba(255,255,255,.10);
-      border-bottom-color: rgba(0,0,0,.35);
-      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
-      color:var(--text);
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      border-radius:14px;
-      padding: 12px;
-      font-size: 15px;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .06s ease, filter .15s ease;
-      min-width:0;
-    }
-    .btn:active{ transform: translateY(1px); filter:brightness(.95); }
-
-    .warnRow{ display:flex; gap:10px; align-items:center; }
-    .warnBtn{ flex:1; padding:10px; font-size:13px; border-radius:12px; }
-
-    .switch{
-      width:46px; height:26px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.25);
-      cursor:pointer;
-      position:relative;
-      flex:0 0 auto;
-      user-select:none;
-    }
-    .switch::after{
-      content:"";
-      position:absolute;
-      top:3px; left:3px;
-      width:20px; height:20px;
-      border-radius:999px;
-      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.45));
-      box-shadow: 0 10px 18px rgba(0,0,0,.35);
-      transition:left .18s ease;
-    }
-    .switch.on{
-      background: rgba(40,209,124,.18);
-      border-color: rgba(40,209,124,.35);
-    }
-    .switch.on::after{ left:23px; }
-
-    .presetGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-      min-height:0;
-      overflow:auto;
-      padding-right:2px;
-    }
-    .presetBtn{
-      padding: 12px;
-      border-radius:14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .presetBtn .pname{
-      font-weight:900;
-      letter-spacing:.10em;
-      font-size: clamp(18px, 4.5vw, 22px);
-      white-space:nowrap;
-    }
-    .presetBtn .pmeta{
-      font-size: clamp(12px, 2vw, 13px);
-      color:var(--muted);
-      letter-spacing:.06em;
-      font-weight:800;
-      text-transform:uppercase;
-      white-space:nowrap;
-    }
-
-    .mainPanel{
-      border:1px solid var(--stroke);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      padding: clamp(6px, 1vw, 10px) clamp(10px, 1.6vw, 14px);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      overflow:hidden;
-      min-width:0;
-    }
-
-    .phasePill{
-      position:absolute;
-      top:10px; right:10px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.25);
-      font-weight:900;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      font-size:12px;
-      color:var(--muted);
-      z-index:2;
-    }
-    .phasePill.work{ color:#ffb3b3; border-color: rgba(255,43,43,.22); }
-    .phasePill.rest{ color:#ffeaa1; border-color: rgba(255,212,0,.22); }
-    .phasePill.paused{ color:#c8d6ff; border-color: rgba(140,170,255,.22); }
-    .phasePill.inf{ color:#d7ddff; border-color: rgba(170,190,255,.22); }
-
-    /* Big timer scales: phones ~96px, tablets ~170px, desktop ~220px */
-    .bigTimer{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-weight:900;
-      font-size: clamp(72px, 18vw, 220px);
-      color:var(--red);
-      line-height:0.94;
-      letter-spacing:.05em;
-      text-shadow: 0 10px 30px rgba(255,43,43,.22);
-      margin:0;
-      text-align:center;
-      width:100%;
-    }
-    .divider{
-      width: min(82%, 700px);
-      height:3px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
-      border-radius:999px;
-      margin: clamp(8px, 1.4vh, 12px) 0 clamp(6px, 1vh, 10px);
-      flex:0 0 auto;
-    }
-
-    .roundRow{
-      display:flex;
-      align-items:baseline;
-      justify-content:center;
-      gap: clamp(10px, 2vw, 18px);
-      text-transform:uppercase;
-      font-weight:900;
-      letter-spacing:.14em;
-      margin: clamp(6px, 1vh, 10px) 0;
-      flex:0 0 auto;
-      flex-wrap: wrap;
-      text-align:center;
-    }
-    .roundRow .label{ color:#fff; opacity:.95; font-size: clamp(18px, 2.8vw, 34px); }
-    .roundRow .value{ color:#fff; font-size: clamp(44px, 6.5vw, 84px); }
-
-    @media (max-width: 480px){
-      .roundRow{ gap: 8px; }
-      .roundRow .label{ font-size: 16px; }
-      .roundRow .value{ font-size: 36px; }
-    }
-    .struck{ text-decoration: line-through; opacity:.55; }
-
-    .smallTimer{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-weight:900;
-      font-size: clamp(48px, 14vw, 148px);
-      color:var(--yellow);
-      line-height:0.98;
-      letter-spacing:.05em;
-      text-shadow: 0 10px 30px rgba(255,212,0,.18);
-      margin:0;
-      text-align:center;
-      width:100%;
-    }
-    .smallTimer.dim{ opacity:.35; }
-
-    footer{
-      height: clamp(64px, 10vh, 78px);
-      flex:0 0 auto;
-      position: relative;
-      z-index: 5;
-      border-top:1px solid var(--stroke);
-      padding: clamp(10px, 1.6vw, 12px) clamp(10px, 1.8vw, 14px);
-      display:flex;
-      gap: clamp(8px, 1.4vw, 12px);
-      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      padding-bottom: calc(clamp(10px, 1.6vw, 12px) + var(--sab));
-      padding-left: calc(clamp(10px, 1.8vw, 14px) + var(--sal));
-      padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
-    }
-    .bottomBtn{
-      flex:1;
-      padding: clamp(12px, 2.2vh, 16px) clamp(10px, 1.8vw, 14px);
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
-      color:var(--text);
-      font-weight:900;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      cursor:pointer;
-      user-select:none;
-      font-size: clamp(13px, 2.2vw, 16px);
-      transition: transform .06s ease, filter .15s ease;
-      min-width:0;
-    }
-    .bottomBtn:active{ transform: translateY(1px); filter:brightness(.95); }
-
-    /* Phone layout: stack left column under main timers */
-    @media (max-width: 780px){
-      .content{
-        grid-template-columns: 1fr;
-      }
-      .leftCol{
-        flex-direction:column;
-      }
-      /* make the left blocks a bit shorter on phone */
-      .blockHeader{ padding:10px 12px; }
-      .blockBody{ padding:10px 12px; }
-    }
-
-    /* keypad modal */
-    .modalBackdrop{
-      position:fixed;
-      inset:0;
-      background:#0b0c0f;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-      z-index:50;
-    }
-    .modalBackdrop.show{ display:flex; }
-    .modal{
-      width:min(520px, 92vw);
-      border-radius:22px;
-      background:#141826;
-      border:1px solid var(--stroke);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .modalHeader{
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      border-bottom:1px solid var(--stroke);
-      background:#111522;
-      gap:10px;
-    }
-    .modalHeader .title{
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.14em;
-      font-size:13px;
-      color:#dfe6ff;
-    }
-    .modalHeader .hint{ font-size:12px; color:var(--muted); }
-    .entry{
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-bottom:1px solid var(--stroke);
-      background:#0e111b;
-    }
-    .entryValue{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-weight:900;
-      font-size: clamp(34px, 7vw, 44px);
-      letter-spacing:.08em;
-      color:#fff;
-    }
-    .pad{
-      padding:14px 16px 16px;
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:10px;
-      background:#141826;
-    }
-    .key{
-      padding:16px 0;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
-      font-weight:900;
-      font-size: clamp(20px, 5vw, 26px);
-      color:var(--text);
-      cursor:pointer;
-      user-select:none;
-    }
-    .key:active{ transform: translateY(1px); filter:brightness(.95); }
-    .key.wide{ grid-column: span 2; }
-    .key.actionEnter{
-      background: linear-gradient(180deg, rgba(40,209,124,.95), rgba(18,80,55,.65));
-      border-color: rgba(40,209,124,.35);
-      text-transform:uppercase;
-      letter-spacing:.1em;
-      font-size: clamp(14px, 3.2vw, 18px);
-    }
-    .key.actionCancel{
-      background: linear-gradient(180deg, rgba(255,154,42,.95), rgba(94,54,15,.65));
-      border-color: rgba(255,154,42,.35);
-      text-transform:uppercase;
-      letter-spacing:.1em;
-      font-size: clamp(14px, 3.2vw, 18px);
-    }
-    .key.actionAlt{
-      background: linear-gradient(180deg, rgba(140,170,255,.55), rgba(50,70,140,.35));
-      border-color: rgba(140,170,255,.35);
-      text-transform:uppercase;
-      letter-spacing:.1em;
-      font-size: clamp(14px, 3.2vw, 18px);
-    }
-
-    /* Settings page modal */
-    .settingsBackdrop{
-      position:fixed;
-      inset:0;
-      background:#0b0c0f;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-      z-index:60;
-    }
-    .settingsBackdrop.show{ display:flex; }
-    .settingsModal{
-      width:min(860px, 96vw);
-      height:min(640px, 92vh);
-      border-radius:22px;
-      background:#141826;
-      border:1px solid var(--stroke);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-    .settingsTop{
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      border-bottom:1px solid var(--stroke);
-      background:#111522;
-      gap:10px;
-    }
-    .settingsTop .title{
-      font-weight:900;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      font-size:14px;
-      color:#dfe6ff;
-    }
-    .settingsClose{
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color:#fff;
-      font-weight:900;
-      padding:10px 12px;
-      cursor:pointer;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      font-size:12px;
-      white-space:nowrap;
-    }
-    .settingsClose:active{ transform: translateY(1px); filter:brightness(.95); }
-
-    .settingsBody{
-      padding:16px;
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap:14px;
-      overflow:auto;
-    }
-    @media (max-width: 900px){
-      .settingsBody{ grid-template-columns: 1fr; }
-      .settingsModal{ height: min(740px, 92vh); }
-    }
-
-    .setCard{
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      padding:14px;
-      min-width:0;
-    }
-    .setCard h3{
-      margin:0 0 10px 0;
-      font-size:12px;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.16em;
-      font-weight:900;
-    }
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:10px 0;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      min-width:0;
-    }
-    .row:last-child{ border-bottom:none; }
-    .row .label{
-      font-weight:900;
-      letter-spacing:.06em;
-      text-transform:uppercase;
-      font-size:12px;
-      color:#e9edf7;
-      white-space:nowrap;
-    }
-    .row .value{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      color:var(--muted);
-      font-weight:900;
-      font-size:12px;
-      letter-spacing:.08em;
-      min-width:64px;
-      text-align:right;
-      white-space:nowrap;
-    }
-    .settingsBody input[type="range"]{ width:100%; min-width:0; }
-
-    .toast{
-      position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom: calc(18px + var(--sab));
-      background: rgba(20,24,38,.95);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      padding:10px 14px;
-      border-radius:999px;
-      font-weight:900;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      font-size:12px;
-      box-shadow: 0 14px 30px rgba(0,0,0,.35);
-      opacity:0;
-      pointer-events:none;
-      transition: opacity .18s ease;
-      z-index:80;
-    }
-    .toast.show{ opacity:1; }
-    .hidden{ display:none !important; }
-    
-    
-    /* iPhone landscape: tighten layout so timers & footer always fit (without forcing side panels hidden) */
-    @media (orientation: landscape) and (max-width: 950px){
-      header{
-        height: 42px;
-        font-size: 13px;
-      }
-      .topControls{
-        height: 50px;
-        padding: 6px;
-      }
-      footer{
-        height: 50px;
-        padding: 6px;
-      }
-
-      /* reduce outer padding so the center panel gets more height */
-      .content{
-        padding: 6px !important;
-        /* keep your normal 2-column layout when left blocks are enabled;
-           JS will switch to .content.fullWidth automatically when both are off */
-        grid-template-columns: minmax(220px, 280px) 1fr;
-        gap: 8px;
-      }
-
-      /* give the timer panel more usable space */
-      .mainPanel{
-        padding: 6px 10px !important;
-        justify-content: space-evenly !important;
-        overflow: visible !important; /* prevent glyph clipping */
-      }
-
-      .phasePill{
-        top: 6px; right: 8px;
-        padding: 6px 8px;
-        font-size: 11px;
-      }
-
-      .bigTimer{
-        font-size: clamp(46px, 13vw, 104px);
-        line-height: 0.90;
-        margin-top: 2px;
-      }
-      .divider{
-        margin: 6px 0 4px;
-        height: 2px;
-      }
-      .roundRow{
-        margin: 4px 0;
-        gap: 10px;
-      }
-      .roundRow .label{ font-size: clamp(14px, 2.5vw, 22px); }
-      .roundRow .value{ font-size: clamp(22px, 5.5vw, 44px); }
-
-      .smallTimer{
-        font-size: clamp(28px, 9vw, 64px);
-        line-height: 0.92;
-        margin-bottom: 2px;
-      }
-
-      /* make left blocks scroll within their column if needed */
-      .leftCol{ overflow: hidden; }
-      .leftCol .blockBody{ overflow: auto; }
-    }
-
+/* ============ Top Controls ============ */
 .topControls{
-        height: 50px;
-        padding: 6px;
-      }
-      footer{
-        height: 50px;
-        padding: 6px;
-      }
-
-      /* reduce outer padding so the center panel gets more height */
-      .content{
-        padding: 6px !important;
-        grid-template-columns: minmax(220px, 280px) 1fr;
-      }
-      /* give the timer panel more usable space */
-      .mainPanel{
-        padding: 6px 10px !important;
-        justify-content: space-evenly !important;
-        overflow: visible !important; /* prevent glyph clipping */
-      }
-
-      .phasePill{
-        top: 6px; right: 8px;
-        padding: 6px 8px;
-        font-size: 11px;
-      }
-
-      .bigTimer{
-        font-size: clamp(46px, 13vw, 104px);
-        line-height: 0.90;
-        margin-top: 2px;
-      }
-      .divider{
-        margin: 6px 0 4px;
-        height: 2px;
-      }
-      .roundRow{
-        margin: 4px 0;
-        gap: 10px;
-      }
-      .roundRow .label{ font-size: clamp(14px, 2.5vw, 22px); }
-      .roundRow .value{ font-size: clamp(22px, 5.5vw, 44px); }
-
-      .smallTimer{
-        font-size: clamp(28px, 9vw, 64px);
-        line-height: 0.92;
-        margin-bottom: 2px;
-      }
-    }
-
-      .topControls{
-        height: 52px;
-        padding: 6px;
-      }
-      footer{
-        height: 52px;
-        padding: 6px;
-      }
-      .bigTimer{
-        font-size: clamp(48px, 14vw, 110px);
-        line-height: 0.92;
-      }
-      .smallTimer{
-        font-size: clamp(32px, 10vw, 72px);
-      }
-      .roundRow .value{
-        font-size: clamp(26px, 6vw, 48px);
-      }
-      /* maximize timer space in short landscape */
-      .content{
-        grid-template-columns: minmax(220px, 280px) 1fr;
-      }
-      }
-
-    /* Silent-mode visual flash */
-    .flashOverlay{
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.85);
-      opacity: 0;
-      pointer-events: none;
-      z-index: 999;
-      transition: opacity 0.08s ease;
-    }
-    .flashOverlay.show{
-      opacity: 1;
-    }
-
-
-    /* iPhone landscape: tighten layout so timers & footer always fit (without forcing side panels hidden) */
-    @media (orientation: landscape) and (max-width: 950px){
-      header{
-        height: 42px;
-        font-size: 13px;
-      }
-      .topControls{
-        height: 50px;
-        padding: 6px;
-      }
-      footer{
-        height: 50px;
-        padding: 6px;
-      }
-
-      /* reduce outer padding so the center panel gets more height */
-      .content{
-        padding: 6px !important;
-        grid-template-columns: minmax(220px, 280px) 1fr;
-        gap: 8px;
-      }
-
-      /* give the timer panel more usable space */
-      .mainPanel{
-        padding: 6px 10px !important;
-        justify-content: space-evenly !important;
-        overflow: visible !important; /* prevent glyph clipping */
-      }
-
-      .phasePill{
-        top: 6px; right: 8px;
-        padding: 6px 8px;
-        font-size: 11px;
-      }
-
-      .bigTimer{
-        font-size: clamp(46px, 13vw, 104px);
-        line-height: 0.90;
-        margin-top: 2px;
-      }
-      .divider{
-        margin: 6px 0 4px;
-        height: 2px;
-      }
-      .roundRow{
-        margin: 4px 0;
-        gap: 10px;
-      }
-      .roundRow .label{ font-size: clamp(14px, 2.5vw, 22px); }
-      .roundRow .value{ font-size: clamp(22px, 5.5vw, 44px); }
-
-      .smallTimer{
-        font-size: clamp(28px, 9vw, 64px);
-        line-height: 0.92;
-        margin-bottom: 2px;
-      }
-
-      /* make left blocks scroll within their column if needed */
-      .leftCol{ overflow: hidden; }
-      .leftCol .blockBody{ overflow: auto; }
-    }
-
-    /* Small phone portrait: prevent timer text from overflowing sideways */
-    @media (max-width: 520px) and (orientation: portrait){
-      .mainPanel{ padding-left: 8px !important; padding-right: 8px !important; }
-      .bigTimer, .smallTimer{
-        width: 100%;
-        white-space: nowrap;
-        letter-spacing: .02em;
-      }
-    }
-
-  
-.header-icons {
-  display: inline-flex;
-  gap: 8px;
-  margin-left: 12px;
-  vertical-align: middle;
+  height: clamp(64px, 10vh, 78px);
+  flex:0 0 auto;
+  border-bottom:1px solid var(--stroke);
+  padding: clamp(10px, 1.6vw, 12px) clamp(10px, 1.8vw, 14px);
+  display:flex;
+  gap: clamp(8px, 1.4vw, 12px);
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+  padding-left: calc(clamp(10px, 1.8vw, 14px) + var(--sal));
+  padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
 }
-.icon-btn {
-  background: #2a2a2a;
-  border: 1px solid #555;
-  color: #eee;
-  font-size: 16px;
-  padding: 4px 6px;
-  border-radius: 5px;
-  cursor: pointer;
+
+.btnRow{
+  flex:1;
+  padding: clamp(12px, 2.2vh, 16px) clamp(10px, 1.8vw, 14px);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+  color:var(--text);
+  font-weight:900;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  cursor:pointer;
+  user-select:none;
+  font-size: clamp(13px, 2.2vw, 16px);
+  transition: transform .06s ease, filter .15s ease;
+  min-width: 0;
 }
-.icon-btn:hover {
-  background: #444;
+.btnRow:active{ transform: translateY(1px); filter:brightness(.95); }
+.btnRow:disabled{ opacity:.45; cursor:not-allowed; }
+.btnRow.green{ background: linear-gradient(180deg, rgba(40,209,124,.95), rgba(18,80,55,.65)); border-color: rgba(40,209,124,.35); }
+.btnRow.orange{ background: linear-gradient(180deg, rgba(255,154,42,.95), rgba(94,54,15,.65)); border-color: rgba(255,154,42,.35); }
+.btnRow.red{ background: linear-gradient(180deg, rgba(255,43,43,.95), rgba(95,18,18,.65)); border-color: rgba(255,43,43,.35); }
+
+/* ============ Main Content ============ */
+.content{
+  flex: 1 1 auto;
+  min-height:0;
+  display:grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: clamp(10px, 1.4vw, 14px);
+  padding: clamp(10px, 1.4vw, 14px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal));
+  padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
 }
-.hidden {
-  display: none !important;
+
+/* Full-width when left column hidden (JS toggles this class) */
+.content.fullWidth{
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.content.fullWidth .leftCol{ display:none; }
+.content.fullWidth .mainPanel{ width:100%; }
+
+.leftCol{
+  display:flex;
+  flex-direction:column;
+  gap: clamp(10px, 1.2vw, 12px);
+  min-height:0;
+  overflow:hidden;
+}
+
+.block{
+  border:1px solid var(--stroke2);
+  border-radius:18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.blockHeader{
+  padding: 12px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-size: 12px;
+  color:var(--muted);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.blockBody{
+  padding: 12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-height:0;
+  overflow:auto;
+}
+
+.btn{
+  border:1px solid rgba(255,255,255,.10);
+  border-bottom-color: rgba(0,0,0,.35);
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+  color:var(--text);
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  border-radius:14px;
+  padding: 12px;
+  font-size: 15px;
+  cursor:pointer;
+  user-select:none;
+  transition: transform .06s ease, filter .15s ease;
+  min-width:0;
+}
+.btn:active{ transform: translateY(1px); filter:brightness(.95); }
+
+.warnRow{ display:flex; gap:10px; align-items:center; }
+.warnBtn{ flex:1; padding:10px; font-size:13px; border-radius:12px; }
+
+.switch{
+  width:46px; height:26px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  cursor:pointer;
+  position:relative;
+  flex:0 0 auto;
+  user-select:none;
+}
+.switch::after{
+  content:"";
+  position:absolute;
+  top:3px; left:3px;
+  width:20px; height:20px;
+  border-radius:999px;
+  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.45));
+  box-shadow: 0 10px 18px rgba(0,0,0,.35);
+  transition:left .18s ease;
+}
+.switch.on{ background: rgba(40,209,124,.18); border-color: rgba(40,209,124,.35); }
+.switch.on::after{ left:23px; }
+
+/* Presets */
+
+/* Dynamic presets */
+.presetList{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.presetAddBtn{
+  justify-content:center;
+  gap:10px;
+  opacity:.92;
+}
+.presetAddBtn .plus{
+  font-size: 22px;
+  line-height: 1;
+}
+.presetAddBtn .label{
+  font-weight:900;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  font-size: 14px;
+  color: var(--text);
+}
+.presetBtnWrap{
+  position:relative;
+}
+.presetBtn{
+  width:100%;
+  touch-action: pan-y; /* allow vertical scroll; we handle horizontal swipe */
+  transition: transform .12s ease;
+}
+
+/* Layout fix: reserve space for swipe hint */
+.presetBtn{
+  padding-right: 120px;
+}
+
+.presetHint{
+  position:absolute;
+  right:12px;
+  top: 78%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  color: rgba(255,255,255,.55);
+  pointer-events:none;
+  opacity:.0;
+  transition: opacity .12s ease;
+  white-space: nowrap;
+}
+.presetBtnWrap.swipeable .presetHint{ opacity:.85; }
+
+.presetGrid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+  min-height:0;
+  overflow:auto;
+  padding-right:2px;
+}
+.presetBtn{
+  padding: 12px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.presetBtn .pname{
+  font-weight:900;
+  letter-spacing:.10em;
+  font-size: clamp(18px, 4.5vw, 22px);
+  white-space:nowrap;
+}
+.presetBtn .pmeta{
+  font-size: clamp(12px, 2vw, 13px);
+  color:var(--muted);
+  letter-spacing:.06em;
+  font-weight:800;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* Center Panel */
+.mainPanel{
+  border:1px solid var(--stroke);
+  border-radius:18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  padding: clamp(6px, 1vw, 10px) clamp(10px, 1.6vw, 14px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  min-width:0;
+}
+
+.phasePill{
+  position:absolute;
+  top:10px; right:10px;
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  font-size:12px;
+  color:var(--muted);
+  z-index:2;
+}
+.phasePill.work{ color:#ffb3b3; border-color: rgba(255,43,43,.22); }
+.phasePill.rest{ color:#ffeaa1; border-color: rgba(255,212,0,.22); }
+.phasePill.paused{ color:#c8d6ff; border-color: rgba(140,170,255,.22); }
+.phasePill.inf{ color:#d7ddff; border-color: rgba(170,190,255,.22); }
+
+.bigTimer{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-weight:900;
+  font-size: clamp(72px, 18vw, 220px);
+  color:var(--red);
+  line-height:0.94;
+  letter-spacing:.05em;
+  text-shadow: 0 10px 30px rgba(255,43,43,.22);
+  margin:0;
+  text-align:center;
+  width:100%;
+}
+
+.divider{
+  width: min(82%, 700px);
+  height:3px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
+  border-radius:999px;
+  margin: clamp(8px, 1.4vh, 12px) 0 clamp(6px, 1vh, 10px);
+  flex:0 0 auto;
+}
+
+.roundRow{
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap: clamp(10px, 2vw, 18px);
+  text-transform:uppercase;
+  font-weight:900;
+  letter-spacing:.14em;
+  margin: clamp(6px, 1vh, 10px) 0;
+  flex:0 0 auto;
+  flex-wrap: wrap;
+  text-align:center;
+}
+.roundRow .label{ color:#fff; opacity:.95; font-size: clamp(18px, 2.8vw, 34px); }
+.roundRow .value{ color:#fff; font-size: clamp(44px, 6.5vw, 84px); }
+@media (max-width: 480px){
+  .roundRow{ gap: 8px; }
+  .roundRow .label{ font-size: 16px; }
+  .roundRow .value{ font-size: 36px; }
+}
+.struck{ text-decoration: line-through; opacity:.55; }
+
+.smallTimer{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-weight:900;
+  font-size: clamp(48px, 14vw, 148px);
+  color:var(--yellow);
+  line-height:0.98;
+  letter-spacing:.05em;
+  text-shadow: 0 10px 30px rgba(255,212,0,.18);
+  margin:0;
+  text-align:center;
+  width:100%;
+}
+.smallTimer.dim{ opacity:.35; }
+
+/* ============ Footer ============ */
+footer{
+  height: clamp(64px, 10vh, 78px);
+  flex:0 0 auto;
+  position: relative;
+  z-index: 5;
+  border-top:1px solid var(--stroke);
+  padding: clamp(10px, 1.6vw, 12px) clamp(10px, 1.8vw, 14px);
+  display:flex;
+  gap: clamp(8px, 1.4vw, 12px);
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+  padding-bottom: calc(clamp(10px, 1.6vw, 12px) + var(--sab));
+  padding-left: calc(clamp(10px, 1.8vw, 14px) + var(--sal));
+  padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
+}
+.bottomBtn{
+  flex:1;
+  padding: clamp(12px, 2.2vh, 16px) clamp(10px, 1.8vw, 14px);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+  color:var(--text);
+  font-weight:900;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  cursor:pointer;
+  user-select:none;
+  font-size: clamp(13px, 2.2vw, 16px);
+  transition: transform .06s ease, filter .15s ease;
+  min-width:0;
+}
+.bottomBtn:active{ transform: translateY(1px); filter:brightness(.95); }
+
+/* Phone layout: stack left column under main timers */
+@media (max-width: 780px){
+  .content{ grid-template-columns: 1fr; }
+  .blockHeader{ padding:10px 12px; }
+  .blockBody{ padding:10px 12px; }
+}
+
+/* iPhone landscape: tighten so timers & footer fit */
+@media (orientation: landscape) and (max-width: 950px){
+  header{ height: 42px; font-size: 13px; }
+  .topControls, footer{ height: 50px; padding: 6px; }
+  .content{
+    padding: 6px !important;
+    grid-template-columns: minmax(220px, 280px) 1fr;
+    gap: 8px;
+  }
+  .mainPanel{
+    padding: 6px 10px !important;
+    justify-content: space-evenly !important;
+    overflow: visible !important;
+  }
+  .phasePill{ top: 6px; right: 8px; padding: 6px 8px; font-size: 11px; }
+  .bigTimer{ font-size: clamp(46px, 13vw, 104px); line-height: 0.90; margin-top: 2px; }
+  .divider{ margin: 6px 0 4px; height: 2px; }
+  .roundRow{ margin: 4px 0; gap: 10px; }
+  .roundRow .label{ font-size: clamp(14px, 2.5vw, 22px); }
+  .roundRow .value{ font-size: clamp(22px, 5.5vw, 44px); }
+  .smallTimer{ font-size: clamp(28px, 9vw, 64px); line-height: 0.92; margin-bottom: 2px; }
+  .leftCol{ overflow: hidden; }
+  .leftCol .blockBody{ overflow: auto; }
+}
+
+/* Small phone portrait: prevent timer text overflow sideways */
+@media (max-width: 520px) and (orientation: portrait){
+  .mainPanel{ padding-left: 8px !important; padding-right: 8px !important; }
+  .bigTimer, .smallTimer{ width: 100%; white-space: nowrap; letter-spacing: .02em; }
+}
+
+/* ============ Modals ============ */
+.modalBackdrop, .settingsBackdrop{
+  position:fixed;
+  inset:0;
+  background:#0b0c0f;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:50;
+}
+.modalBackdrop.show{ display:flex; }
+.settingsBackdrop{ z-index:60; }
+.settingsBackdrop.show{ display:flex; }
+
+.modal{
+  width:min(520px, 92vw);
+  border-radius:22px;
+  background:#141826;
+  border:1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+}
+.modalHeader{
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--stroke);
+  background:#111522;
+  gap:10px;
+}
+.modalHeader .title{
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-size:13px;
+  color:#dfe6ff;
+}
+.modalHeader .hint{ font-size:12px; color:var(--muted); }
+.entry{
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-bottom:1px solid var(--stroke);
+  background:#0e111b;
+}
+.entryValue{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-weight:900;
+  font-size: clamp(34px, 7vw, 44px);
+  letter-spacing:.08em;
+  color:#fff;
+}
+.pad{
+  padding:14px 16px 16px;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:10px;
+  background:#141826;
+}
+.key{
+  padding:16px 0;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+  font-weight:900;
+  font-size: clamp(20px, 5vw, 26px);
+  color:var(--text);
+  cursor:pointer;
+  user-select:none;
+}
+.key:active{ transform: translateY(1px); filter:brightness(.95); }
+.key.wide{ grid-column: span 2; }
+.key.actionEnter{
+  background: linear-gradient(180deg, rgba(40,209,124,.95), rgba(18,80,55,.65));
+  border-color: rgba(40,209,124,.35);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-size: clamp(14px, 3.2vw, 18px);
+}
+.key.actionCancel{
+  background: linear-gradient(180deg, rgba(255,154,42,.95), rgba(94,54,15,.65));
+  border-color: rgba(255,154,42,.35);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-size: clamp(14px, 3.2vw, 18px);
+}
+.key.actionAlt{
+  background: linear-gradient(180deg, rgba(140,170,255,.55), rgba(50,70,140,.35));
+  border-color: rgba(140,170,255,.35);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-size: clamp(14px, 3.2vw, 18px);
+}
+
+/* Settings modal */
+.settingsModal{
+  width:min(860px, 96vw);
+  height:min(640px, 92vh);
+  border-radius:22px;
+  background:#141826;
+  border:1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.settingsTop{
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--stroke);
+  background:#111522;
+  gap:10px;
+}
+.settingsTop .title{
+  font-weight:900;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  font-size:14px;
+  color:#dfe6ff;
+}
+.settingsClose{
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color:#fff;
+  font-weight:900;
+  padding:10px 12px;
+  cursor:pointer;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:12px;
+  white-space:nowrap;
+}
+.settingsClose:active{ transform: translateY(1px); filter:brightness(.95); }
+
+.settingsBody{
+  padding:16px;
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:14px;
+  overflow:auto;
+}
+@media (max-width: 900px){
+  .settingsBody{ grid-template-columns: 1fr; }
+  .settingsModal{ height: min(740px, 92vh); }
+}
+.setCard{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  padding:14px;
+  min-width:0;
+}
+.setCard h3{
+  margin:0 0 10px 0;
+  font-size:12px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-weight:900;
+}
+.row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  min-width:0;
+}
+.row:last-child{ border-bottom:none; }
+.row .label{
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  font-size:12px;
+  color:#e9edf7;
+  white-space:nowrap;
+}
+.row .value{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  color:var(--muted);
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.08em;
+  min-width:64px;
+  text-align:right;
+  white-space:nowrap;
+}
+.settingsBody input[type="range"]{ width:100%; min-width:0; }
+
+/* ============ Toast + Helpers ============ */
+.toast{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom: calc(18px + var(--sab));
+  background: rgba(20,24,38,.95);
+  border:1px solid rgba(255,255,255,.10);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-size:12px;
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+  opacity:0;
+  pointer-events:none;
+  transition: opacity .18s ease;
+  z-index:80;
+}
+.toast.show{ opacity:1; }
+.hidden{ display:none !important; }
+
+
+/* =========================
+   UTILITY CLASSES (modifiers)
+   Keep markup clean: apply these as needed.
+   ========================= */
+.growMin0{ flex:1; min-height:0; }
+.pad10{ padding:10px !important; }
+.labelSlash{ opacity:.55; letter-spacing:.08em; font-weight:800; }
+.valueMuted{ opacity:.8; }
+.fullRow{ grid-column: 1 / -1; }
+.btnRowEnd{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.testBtnClack{ background:rgba(140,170,255,.12); }
+.testBtnBuzz{ background:rgba(255,212,0,.12); }
+
+
+/* Scrollbar polish */
+html, body{
+  overflow-x: hidden;
+}
+
+.content{
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar visuals (WebKit) */
+.content::-webkit-scrollbar{
+  height: 0;
+}
+
+/* Firefox */
+.content{
+  scrollbar-width: none;
+}
+
+
+/* HARD scrollbar kill (no horizontal bleed anywhere) */
+*{
+  max-width: 100%;
+}
+
+.app,
+.content,
+.leftCol,
+.block,
+.blockBody,
+.presetGrid,
+.presetList{
+  overflow-x: hidden !important;
+}
+
+/* Hide scrollbar visuals everywhere but keep vertical scroll */
+*::-webkit-scrollbar{
+  width: 0;
+  height: 0;
+}
+
+*{
+  scrollbar-width: none;
 }
 
 </style>
@@ -974,13 +828,36 @@ header{
 <body>
   <div class="app">
     <header>
-      <div class="settingsBtn" id="openSettings" title="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.5-2.4.6a8 8 0 0 0-1.7-1L14 2h-4l-.4 2.6a8 8 0 0 0-1.7 1L5.5 5 3.5 8.5 5.5 10a7.9 7.9 0 0 0 0 2L3.5 13.5 5.5 17l2.4-.6a8 8 0 0 0 1.7 1L10 22h4l.4-2.6a8 8 0 0 0 1.7-1l2.4.6 2-3.5-2-1.5z"></path>
-        </svg>
-      </div>
-      Timer
+
+<div class="headerIcons" aria-label="Top left controls">
+  <!-- Settings -->
+  <div class="iconBtn" id="openSettings" title="Settings" role="button" tabindex="0" aria-label="Open settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.5-2.4.6a8 8 0 0 0-1.7-1L14 2h-4l-.4 2.6a8 8 0 0 0-1.7 1L5.5 5 3.5 8.5 5.5 10a7.9 7.9 0 0 0 0 2L3.5 13.5 5.5 17l2.4-.6a8 8 0 0 0 1.7 1L10 22h4l.4-2.6a8 8 0 0 0 1.7-1l2.4.6 2-3.5-2-1.5z"></path>
+    </svg>
+  </div>
+
+  <!-- Warnings -->
+  <div class="iconBtn" id="toggleWarningsIcon" title="Warnings" role="button" tabindex="0" aria-label="Toggle warnings panel">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.3 3.2 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0z"></path>
+      <path d="M12 9v4"></path>
+      <path d="M12 17h.01"></path>
+    </svg>
+  </div>
+
+  <!-- Presets -->
+  <div class="iconBtn" id="togglePresetsIcon" title="Presets" role="button" tabindex="0" aria-label="Toggle presets panel">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 2l2.9 6 6.6.6-5 4.2 1.5 6.4L12 16.9 6 19.2l1.4-6.4-5-4.2L9.1 8z"></path>
+    </svg>
+  </div>
+</div>
+Timer
     </header>
 
     <div class="topControls">
@@ -990,12 +867,6 @@ header{
     </div>
 
     <div class="content">
-      <div class="sideTabs" aria-label="Side tabs">
-        <button class="sideTab" id="tabWarnings" type="button">Warnings</button>
-        <button class="sideTab" id="tabPresets" type="button">Presets</button>
-      </div>
-
-      
       <aside class="leftCol" id="leftCol">
         <section class="block" id="warningsBlock">
           <div class="blockHeader"><span>Warnings</span></div>
@@ -1011,16 +882,18 @@ header{
           </div>
         </section>
 
-        <section class="block" id="presetsBlock" style="flex:1; min-height:0;">
+        <section class="block growMin0" id="presetsBlock">
           <div class="blockHeader">Presets</div>
-          <div class="blockBody" style="padding:10px;">
+          <div class="blockBody pad10">
             <div class="presetGrid">
-              <button class="btn presetBtn" id="preset1"><span class="pname" id="preset1Label">--:--</span><span class="pmeta" id="preset1Meta">hold to save</span></button>
-              <button class="btn presetBtn" id="preset2"><span class="pname" id="preset2Label">--:--</span><span class="pmeta" id="preset2Meta">hold to save</span></button>
-              <button class="btn presetBtn" id="preset3"><span class="pname" id="preset3Label">--:--</span><span class="pmeta" id="preset3Meta">hold to save</span></button>
-              <button class="btn presetBtn" id="preset4"><span class="pname" id="preset4Label">--:--</span><span class="pmeta" id="preset4Meta">hold to save</span></button>
-              <button class="btn presetBtn" id="preset5"><span class="pname" id="preset5Label">--:--</span><span class="pmeta" id="preset5Meta">hold to save</span></button>
-            </div>
+              
+              <div id="presetList" class="presetList"></div>
+
+              <button class="btn presetAddBtn" id="addPresetBtn" type="button" aria-label="Add preset">
+                <span class="plus">＋</span>
+                <span class="label">Add Preset</span>
+              </button>
+</div>
           </div>
         </section>
       </aside>
@@ -1034,8 +907,8 @@ header{
         <div class="roundRow">
           <div class="label" id="roundLabel">ROUND</div>
           <div class="value" id="roundDisplay">1</div>
-          <div class="label" id="slashLabel" style="opacity:.55;letter-spacing:.08em;font-weight:800;">/</div>
-          <div class="value" id="roundTotalDisplay" style="opacity:.8;">8</div>
+          <div class="label labelSlash" id="slashLabel">/</div>
+          <div class="value valueMuted" id="roundTotalDisplay">8</div>
         </div>
 
         <div class="smallTimer" id="restDisplay">00:30</div>
@@ -1128,13 +1001,18 @@ header{
           </div>
         </div>
 
-        <div class="setCard" style="grid-column: 1 / -1;">
+        <div class="setCard fullRow">
           <h3>Display</h3>
-<div class="row">
+
+          
+
+          
+
+          <div class="row">
             <div class="label">Test Sounds</div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-              <button class="settingsClose" id="testClack" style="background:rgba(140,170,255,.12);">Test Clap</button>
-              <button class="settingsClose" id="testBuzz" style="background:rgba(255,212,0,.12);">Test Buzzer</button>
+            <div class="btnRowEnd">
+              <button class="settingsClose testBtn testBtnClack" id="testClack">Test Clap</button>
+              <button class="settingsClose testBtn testBtnBuzz" id="testBuzz">Test Buzzer</button>
             </div>
             <div class="value"></div>
           </div>
@@ -1146,9 +1024,25 @@ header{
 
   <div class="toast" id="toast">Saved</div>
 
-  <script>
+  <div class="flashOverlay" id="flashOverlay" aria-hidden="true"></div>
 
-    // ---------- iOS Safari viewport fix ----------
+  <script>
+    // ============================================================
+    // HARDENING: tolerate missing DOM blocks during iterative edits
+    // ============================================================
+    window.addEventListener("error", (e) => {
+      // Keep UI alive during layout refactors; check DevTools console for details.
+      console.error("UI error:", e.error || e.message);
+    });
+
+    /* ============================================================
+       TIMER UI SCRIPT
+       - Split into clear sections for safe iteration.
+       - Prefer editing values in the EDIT HERE blocks.
+       ============================================================ */
+    /* ============================================================
+       VIEWPORT / SAFE AREA
+       ============================================================ */
     // Keeps the UI sized to the *visible* viewport so the Safari toolbars don't cover timers/buttons.
     (function(){
       function setAppHeight(){
@@ -1157,22 +1051,24 @@ header{
         document.documentElement.style.setProperty("--apph", h + "px");
       }
       setAppHeight();
-      window.addEventListener("resize", setAppHeight, {passive:true});
-      window.addEventListener("orientationchange", () => setTimeout(setAppHeight, 50), {passive:true});
+      window?.addEventListener("resize", setAppHeight, {passive:true});
+      window?.addEventListener("orientationchange", () => setTimeout(setAppHeight, 50), {passive:true});
       if (window.visualViewport){
         window.visualViewport.addEventListener("resize", setAppHeight, {passive:true});
         window.visualViewport.addEventListener("scroll", setAppHeight, {passive:true});
       }
     })();
 
-    // ---------------- Persistent Settings ----------------
+    /* ============================================================
+       SETTINGS STORAGE
+       ============================================================ */
     const SETTINGS_KEY = "hiit_settings_v4_responsive";
     const defaultSettings = {
       clapVolume: 1.0,
-      clapInterval: 0.08,
+      clapInterval: 0.20,
       clapCount: 4,
       buzzVolume: 0.35,
-      buzzDurationMs: 450,
+      buzzDurationMs: 525,
       showWarnings: true,
       showPresets: true
     };
@@ -1202,7 +1098,9 @@ header{
     }
     let settings = loadSettings();
 
-    // ---------------- Wake Lock (prevent screen sleep while running) ----------------
+    /* ============================================================
+       WAKE LOCK
+       ============================================================ */
     // Works on most modern Chrome/Edge/Android; iOS Safari support is limited.
     let wakeLock = null;
 
@@ -1211,7 +1109,7 @@ header{
         if (!("wakeLock" in navigator)) return;
         if (wakeLock) return; // already held
         wakeLock = await navigator.wakeLock.request("screen");
-        wakeLock.addEventListener("release", () => { wakeLock = null; });
+        wakeLock?.addEventListener("release", () => { wakeLock = null; });
       }catch{
         // ignore (permission, unsupported, etc.)
       }
@@ -1228,7 +1126,7 @@ header{
       }
     }
 
-    document.addEventListener("visibilitychange", () => {
+    document?.addEventListener("visibilitychange", () => {
       // If the page comes back visible while running, try to re-acquire.
       if (document.visibilityState === "visible"){
         if (state && state.running && !state.paused){
@@ -1240,8 +1138,9 @@ header{
       }
     });
 
-
-    // ---------- Helpers ----------
+    /* ============================================================
+       UTILITIES
+       ============================================================ */
     function fmtMMSS_Countdown(ms){
       ms = Math.max(0, Math.round(ms));
       const totalSec = Math.ceil(ms / 1000);
@@ -1268,8 +1167,9 @@ header{
       return String(mm).padStart(2,'0') + String(ss).padStart(2,'0');
     }
 
-    
-    // ---------- Silent-mode fallback (iOS Silent Switch) ----------
+    /* ============================================================
+       AUDIO COMPATIBILITY
+       ============================================================ */
     function vibratePattern(pattern){
       if ("vibrate" in navigator){
         try{ navigator.vibrate(pattern); }catch(e){}
@@ -1280,15 +1180,17 @@ header{
       if (!el) return;
       let i = 0;
       const flashOnce = () => {
-        el.classList.add("show");
-        setTimeout(() => el.classList.remove("show"), 60);
+        el?.classList.add("show");
+        setTimeout(() => el?.classList.remove("show"), 60);
         i++;
         if (i < times) setTimeout(flashOnce, 120);
       };
       flashOnce();
     }
 
-    // ---------- Audio ----------
+    /* ============================================================
+       AUDIO
+       ============================================================ */
     let audioCtx = null;
     let audioUnlocked = false;
 
@@ -1458,7 +1360,18 @@ header{
       }
     }
 
-    // ---------- State ----------
+    /* ============================================================
+       APP STATE
+       ============================================================ */
+    // =========================================================
+    // EDIT HERE: Default timer values (applies on page load / reset)
+    // =========================================================
+    // state.workMs      = work duration in milliseconds (e.g. 5*60*1000)
+    // state.restMs      = rest duration in milliseconds (e.g. 30*1000)
+    // state.totalRounds = total rounds (1–99)
+    // state.startWarnMs / endWarnMs = warning trigger times (ms remaining)
+    // =========================================================
+
     const state = {
       workMs: 5 * 60 * 1000,
       restMs: 30 * 1000,
@@ -1491,19 +1404,17 @@ header{
       settingsOpen: false
     };
 
-    // ---------- Presets ----------
+    /* ============================================================
+       PRESETS
+       ============================================================ */
     const PRESET_KEY = "hiit_presets_v5";
-    const PRESET_COUNT = 5;
-    const defaultPresets = Array.from({length: PRESET_COUNT}, () => ({
-      workMs: 0, restMs: 0, rounds: 0, roundsInfinite:false, workInfinite:false
-    }));
-
-    function loadPresets(){
+    const defaultPreset = { workMs: 0, restMs: 0, rounds: 0, roundsInfinite:false, workInfinite:false };
+function loadPresets(){
       try{
         const raw = localStorage.getItem(PRESET_KEY);
-        if (!raw) return JSON.parse(JSON.stringify(defaultPresets));
+        if (!raw) return [];
         const arr = JSON.parse(raw);
-        if (!Array.isArray(arr) || arr.length !== PRESET_COUNT) return JSON.parse(JSON.stringify(defaultPresets));
+        if (!Array.isArray(arr) || arr.length < 1) return [];
         return arr.map(p => ({
           workMs: typeof p.workMs === "number" ? p.workMs : 0,
           restMs: typeof p.restMs === "number" ? p.restMs : 0,
@@ -1512,13 +1423,15 @@ header{
           workInfinite: !!p.workInfinite
         }));
       }catch{
-        return JSON.parse(JSON.stringify(defaultPresets));
+        return [];
       }
     }
     function savePresets(p){ localStorage.setItem(PRESET_KEY, JSON.stringify(p)); }
     let presets = loadPresets();
 
-    // ---------- Elements ----------
+    /* ============================================================
+       DOM REFERENCES
+       ============================================================ */
     const contentEl = document.querySelector(".content");
     const workDisplay = document.getElementById("workDisplay");
     const restDisplay = document.getElementById("restDisplay");
@@ -1542,10 +1455,11 @@ header{
     const warningsBlock = document.getElementById("warningsBlock");
     const presetsBlock = document.getElementById("presetsBlock");
 
-    const tabWarnings = document.getElementById("tabWarnings");
-    const tabPresets  = document.getElementById("tabPresets");
+    
 
-    const modalBackdrop = document.getElementById("modalBackdrop");
+    const presetList = document.getElementById("presetList");
+    const addPresetBtn = document.getElementById("addPresetBtn");
+const modalBackdrop = document.getElementById("modalBackdrop");
     const modalTitle = document.getElementById("modalTitle");
     const modalHint = document.getElementById("modalHint");
     const entryValue = document.getElementById("entryValue");
@@ -1553,10 +1467,11 @@ header{
     const pad = document.getElementById("pad");
 
     const openSettingsBtn = document.getElementById("openSettings");
+    const toggleWarningsIcon = document.getElementById("toggleWarningsIcon");
+    const togglePresetsIcon  = document.getElementById("togglePresetsIcon");
     const settingsBackdrop = document.getElementById("settingsBackdrop");
     const closeSettingsBtn = document.getElementById("closeSettings");
-
-    const testClack = document.getElementById("testClack");
+const testClack = document.getElementById("testClack");
     const testBuzz = document.getElementById("testBuzz");
 
     const clapVol = document.getElementById("clapVol");
@@ -1570,24 +1485,20 @@ header{
     const buzzDurVal = document.getElementById("buzzDurVal");
 
     const toast = document.getElementById("toast");
-    const presetBtns = [
-      { btn: document.getElementById("preset1"), label: document.getElementById("preset1Label"), meta: document.getElementById("preset1Meta") },
-      { btn: document.getElementById("preset2"), label: document.getElementById("preset2Label"), meta: document.getElementById("preset2Meta") },
-      { btn: document.getElementById("preset3"), label: document.getElementById("preset3Label"), meta: document.getElementById("preset3Meta") },
-      { btn: document.getElementById("preset4"), label: document.getElementById("preset4Label"), meta: document.getElementById("preset4Meta") },
-      { btn: document.getElementById("preset5"), label: document.getElementById("preset5Label"), meta: document.getElementById("preset5Meta") }
-    ];
-
-    // ---------- Toast ----------
+/* ============================================================
+       TOAST / NOTICES
+       ============================================================ */
     let toastTimer = null;
     function showToast(text){
-      toast.textContent = text;
-      toast.classList.add("show");
+      if (toast) toast.textContent = text;
+      toast?.classList.add("show");
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(()=>toast.classList.remove("show"), 900);
+      toastTimer = setTimeout(()=>toast?.classList.remove("show"), 900);
     }
 
-    // ---------- Reset ----------
+    /* ============================================================
+       RESET / FACTORY DEFAULTS
+       ============================================================ */
     function resetPhaseGuards(){
       state.buzzedZeroThisPhase = false;
       state.firedStartWarnThisPhase = false;
@@ -1607,7 +1518,9 @@ header{
       resetPhaseGuards();
     }
 
-    // ---------- Warnings ----------
+    /* ============================================================
+       WARNINGS
+       ============================================================ */
     function maybeFireWorkWarning(beforeMs, afterMs){
       if (!state.endWarnEnabled || state.firedEndWarnThisPhase || state.endWarnMs <= 0) return;
       if (beforeMs > state.endWarnMs && afterMs <= state.endWarnMs){
@@ -1637,40 +1550,42 @@ header{
       }
     }
 
-    // ---------- Keypad ----------
+    /* ============================================================
+       KEYPAD
+       ============================================================ */
     function renderKeypad(){
       if (!state.keypadOpen) return;
       const show = (ms) => fmtMMSS_Countdown(ms);
 
       if (state.keypadTarget === "work"){
-        modalTitle.textContent = "SET WORK";
-        modalHint.textContent = "Enter MMSS or tap Infinite";
-        currentConfig.textContent = "Current: " + (state.workInfinite ? "∞" : show(state.workMs));
+        if (modalTitle) modalTitle.textContent = "SET WORK";
+        if (modalHint) modalHint.textContent = "Enter MMSS or tap Infinite";
+        if (currentConfig) currentConfig.textContent = "Current: " + (state.workInfinite ? "∞" : show(state.workMs));
         const base = state.keypadDigits || msToMMSSDigits(state.workMs);
-        entryValue.textContent = state.workInfinite ? "∞" : show(mmssDigitsToMs(base));
+        if (entryValue) entryValue.textContent = state.workInfinite ? "∞" : show(mmssDigitsToMs(base));
       } else if (state.keypadTarget === "rest"){
-        modalTitle.textContent = "SET REST";
-        modalHint.textContent = "Enter MMSS";
-        currentConfig.textContent = "Current: " + show(state.restMs);
+        if (modalTitle) modalTitle.textContent = "SET REST";
+        if (modalHint) modalHint.textContent = "Enter MMSS";
+        if (currentConfig) currentConfig.textContent = "Current: " + show(state.restMs);
         const base = state.keypadDigits || msToMMSSDigits(state.restMs);
-        entryValue.textContent = show(mmssDigitsToMs(base));
+        if (entryValue) entryValue.textContent = show(mmssDigitsToMs(base));
       } else if (state.keypadTarget === "rounds"){
-        modalTitle.textContent = "SET ROUNDS";
-        modalHint.textContent = "Enter 1–99 or tap Infinite";
-        currentConfig.textContent = "Current: " + (state.roundsInfinite ? "∞" : state.totalRounds);
-        entryValue.textContent = state.roundsInfinite ? "∞" : (state.keypadDigits.length ? state.keypadDigits : String(state.totalRounds));
+        if (modalTitle) modalTitle.textContent = "SET ROUNDS";
+        if (modalHint) modalHint.textContent = "Enter 1–99 or tap Infinite";
+        if (currentConfig) currentConfig.textContent = "Current: " + (state.roundsInfinite ? "∞" : state.totalRounds);
+        if (entryValue) entryValue.textContent = state.roundsInfinite ? "∞" : (state.keypadDigits.length ? state.keypadDigits : String(state.totalRounds));
       } else if (state.keypadTarget === "startWarn"){
-        modalTitle.textContent = "START WARN (REST)";
-        modalHint.textContent = "Clacks when REST remaining hits this";
-        currentConfig.textContent = "Current: " + show(state.startWarnMs);
+        if (modalTitle) modalTitle.textContent = "START WARN (REST)";
+        if (modalHint) modalHint.textContent = "Clacks when REST remaining hits this";
+        if (currentConfig) currentConfig.textContent = "Current: " + show(state.startWarnMs);
         const base = state.keypadDigits || msToMMSSDigits(state.startWarnMs);
-        entryValue.textContent = show(mmssDigitsToMs(base));
+        if (entryValue) entryValue.textContent = show(mmssDigitsToMs(base));
       } else if (state.keypadTarget === "endWarn"){
-        modalTitle.textContent = "END WARN (WORK)";
-        modalHint.textContent = "Clacks when WORK remaining hits this";
-        currentConfig.textContent = "Current: " + show(state.endWarnMs);
+        if (modalTitle) modalTitle.textContent = "END WARN (WORK)";
+        if (modalHint) modalHint.textContent = "Clacks when WORK remaining hits this";
+        if (currentConfig) currentConfig.textContent = "Current: " + show(state.endWarnMs);
         const base = state.keypadDigits || msToMMSSDigits(state.endWarnMs);
-        entryValue.textContent = show(mmssDigitsToMs(base));
+        if (entryValue) entryValue.textContent = show(mmssDigitsToMs(base));
       }
     }
 
@@ -1751,92 +1666,242 @@ header{
       render();
     }
 
-    // ---------- Render ----------
+    /* ============================================================
+       RENDER
+       ============================================================ */
     function renderPresets(){
-      for (let i=0;i<PRESET_COUNT;i++){
-        const p = presets[i];
-        if (!p || (!p.workInfinite && (!p.workMs || p.workMs <= 0))){
-          presetBtns[i].label.textContent = "--:--";
-          presetBtns[i].meta.textContent = "hold to save";
-          continue;
+      if (!presetList) return;
+      presets = Array.isArray(presets) ? presets : [];
+      presetList.innerHTML = "";
+
+      for (let i=0;i<presets.length;i++){
+        const p = presets[i] || { ...defaultPreset };
+
+        const wrap = document.createElement("div");
+        wrap.className = "presetBtnWrap swipeable";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn presetBtn";
+        btn.setAttribute("data-idx", String(i));
+
+        const name = document.createElement("span");
+        name.className = "pname";
+
+        const meta = document.createElement("span");
+        meta.className = "pmeta";
+
+        const isEmpty = (!p.workInfinite && (!p.workMs || p.workMs <= 0));
+        if (isEmpty){
+          name.textContent = "--:--";
+          meta.textContent = "hold to save";
+        } else {
+          const wLabel = p.workInfinite ? "∞" : fmtMMSS_Countdown(p.workMs);
+          name.textContent = wLabel;
+          const r = fmtMMSS_Countdown(p.restMs || 0);
+          const rounds = p.roundsInfinite ? "∞" : String(p.rounds || 0);
+          meta.textContent = `rest ${r} • rounds ${rounds}`;
         }
-        const wLabel = p.workInfinite ? "∞" : fmtMMSS_Countdown(p.workMs);
-        presetBtns[i].label.textContent = wLabel;
-        const r = fmtMMSS_Countdown(p.restMs || 0);
-        const rounds = p.roundsInfinite ? "∞" : String(p.rounds || 0);
-        presetBtns[i].meta.textContent = `rest ${r} • rounds ${rounds}`;
+
+        btn.appendChild(name);
+        btn.appendChild(meta);
+
+        // Swipe hint (only on extra presets)
+        const hint = document.createElement("div");
+        hint.className = "presetHint";
+        hint.textContent = "SWIPE LEFT TO DELETE";
+
+        wrap.appendChild(btn);
+        wrap.appendChild(hint);
+        presetList.appendChild(wrap);
+
+        bindPresetButton(btn, i);
       }
+    }
+
+    function addPresetSlot(){
+      presets = Array.isArray(presets) ? presets : [];
+      presets.push({ ...defaultPreset });
+      savePresets(presets);
+      renderPresets();
+      render();
+      showToast("Preset Slot Added");
+    }
+
+    function deletePresetSlot(idx){
+      if (!Array.isArray(presets) || presets.length < 1) return;
+      if (idx < 0 || idx >= presets.length) return;
+      presets.splice(idx, 1);
+      savePresets(presets);
+      renderPresets();
+      render();
+      showToast("Preset Deleted");
+    }
+
+    function bindPresetButton(el, idx){
+      if (!el) return;
+
+      let pressTimer = null;
+      let longPressed = false;
+
+      // swipe
+      let swiping = false;
+      let startX = 0;
+      let startY = 0;
+      let dx = 0;
+
+      const clearPress = () => {
+        if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+      };
+
+      const onDown = (x,y) => {
+        userTapAudioPrime();
+        longPressed = false;
+        swiping = false;
+        startX = x; startY = y;
+        dx = 0;
+        clearPress();
+        pressTimer = setTimeout(() => {
+          longPressed = true;
+          savePresetAt(idx);
+        }, LONG_PRESS_MS);
+      };
+
+      const movedTooFar = (x,y) => {
+        const ddx = x - startX, ddy = y - startY;
+        return (ddx*ddx + ddy*ddy) > (14*14);
+      };
+
+      const setTranslate = (t) => {
+        el.style.transform = `translateX(${t}px)`;
+      };
+
+      el.addEventListener("pointerdown", (e) => {
+        el.setPointerCapture?.(e.pointerId);
+        onDown(e.clientX, e.clientY);
+      });
+
+      el.addEventListener("pointermove", (e) => {
+        const x = e.clientX, y = e.clientY;
+        const ddx = x - startX;
+        const ddy = y - startY;
+
+        // cancel long press if user moves
+        if (pressTimer && movedTooFar(x,y)) clearPress();
+
+        // Swipe delete (any preset)
+        {
+          // if the user is mostly moving horizontally, treat as swipe
+          if (!swiping){
+            if (Math.abs(ddx) > 18 && Math.abs(ddx) > Math.abs(ddy) * 1.2){
+              swiping = true;
+              clearPress();
+            }
+          }
+          if (swiping){
+            dx = Math.min(0, ddx); // only allow left swipe
+            setTranslate(Math.max(dx, -140));
+          }
+        }
+      });
+
+      el.addEventListener("pointerup", () => {
+        clearPress();
+
+        // If swiped far enough, delete
+        if (swiping && dx < -80){
+          setTranslate(-140);
+          // small delay for visual feedback
+          setTimeout(() => deletePresetSlot(idx), 90);
+          return;
+        }
+
+        // snap back
+        if (swiping) setTranslate(0);
+
+        // tap loads preset (if not long pressed)
+        if (!longPressed && !swiping) applyPreset(presets[idx]);
+      });
+
+      el.addEventListener("pointercancel", () => {
+        clearPress();
+        if (swiping) setTranslate(0);
+      });
+
+      el.addEventListener("contextmenu", (e)=>e.preventDefault());
     }
 
     function syncSettingsUI(){
-      clapVol.value = String(settings.clapVolume);
-      clapVolVal.textContent = settings.clapVolume.toFixed(2);
+      if (clapVol) clapVol.value = String(settings.clapVolume);
+      if (clapVolVal) clapVolVal.textContent = settings.clapVolume.toFixed(2);
 
-      clapInterval.value = String(settings.clapInterval);
-      clapIntervalVal.textContent = settings.clapInterval.toFixed(2) + "s";
+      if (clapInterval) clapInterval.value = String(settings.clapInterval);
+      if (clapIntervalVal) clapIntervalVal.textContent = settings.clapInterval.toFixed(2) + "s";
 
-      buzzVol.value = String(settings.buzzVolume);
-      buzzVolVal.textContent = settings.buzzVolume.toFixed(2);
+      if (buzzVol) buzzVol.value = String(settings.buzzVolume);
+      if (buzzVolVal) buzzVolVal.textContent = settings.buzzVolume.toFixed(2);
 
-      buzzDur.value = String(settings.buzzDurationMs);
-      buzzDurVal.textContent = String(Math.round(settings.buzzDurationMs)) + "ms";
-    }
+      if (buzzDur) buzzDur.value = String(settings.buzzDurationMs);
+      if (buzzDurVal) buzzDurVal.textContent = String(Math.round(settings.buzzDurationMs)) + "ms";
+}
 
     function render(){
       // show/hide blocks
-      warningsBlock.classList.toggle("hidden", !settings.showWarnings);
-      presetsBlock.classList.toggle("hidden", !settings.showPresets);
-
-      // side tabs visual state
-      if (tabWarnings) tabWarnings.classList.toggle("on", settings.showWarnings);
-      if (tabPresets)  tabPresets.classList.toggle("on", settings.showPresets);
+      warningsBlock?.classList.toggle("hidden", !settings.showWarnings);
+      presetsBlock?.classList.toggle("hidden", !settings.showPresets);
 
       // Full width mode when both hidden
       const showLeft = settings.showWarnings || settings.showPresets;
-      contentEl.classList.toggle("fullWidth", !showLeft);
+      contentEl?.classList.toggle("fullWidth", !showLeft);
 
       // timers
-      workDisplay.textContent = state.workInfinite
+      if (workDisplay) workDisplay.textContent = state.workInfinite
         ? fmtMMSS_FromSeconds(state.workElapsedSec)
         : fmtMMSS_Countdown(state.remainingWorkMs);
 
-      restDisplay.textContent = fmtMMSS_Countdown(state.remainingRestMs);
-      restDisplay.classList.toggle("dim", state.workInfinite);
+      if (restDisplay) restDisplay.textContent = fmtMMSS_Countdown(state.remainingRestMs);
+      restDisplay?.classList.toggle("dim", state.workInfinite);
 
       const strikeRounds = state.workInfinite;
-      document.getElementById("roundLabel").classList.toggle("struck", strikeRounds);
-      document.getElementById("slashLabel").classList.toggle("struck", strikeRounds);
-      roundDisplay.classList.toggle("struck", strikeRounds);
-      roundTotalDisplay.classList.toggle("struck", strikeRounds);
+      document.getElementById("roundLabel")?.classList.toggle("struck", strikeRounds);
+      document.getElementById("slashLabel")?.classList.toggle("struck", strikeRounds);
+      roundDisplay?.classList.toggle("struck", strikeRounds);
+      roundTotalDisplay?.classList.toggle("struck", strikeRounds);
 
-      roundDisplay.textContent = String(state.currentRound);
-      roundTotalDisplay.textContent = state.roundsInfinite ? "∞" : String(state.totalRounds);
+      if (roundDisplay) roundDisplay.textContent = String(state.currentRound);
+      if (roundTotalDisplay) roundTotalDisplay.textContent = state.roundsInfinite ? "∞" : String(state.totalRounds);
 
-      phasePill.classList.remove("work","rest","paused","inf");
+      phasePill?.classList.remove("work","rest","paused","inf");
       if (state.paused){
-        phasePill.classList.add("paused");
-        phasePill.textContent = "PAUSED";
+        phasePill?.classList.add("paused");
+        if (phasePill) phasePill.textContent = "PAUSED";
       } else if (state.workInfinite){
-        phasePill.classList.add("inf");
-        phasePill.textContent = "INFINITE";
+        phasePill?.classList.add("inf");
+        if (phasePill) phasePill.textContent = "INFINITE";
       } else {
-        phasePill.classList.add(state.phase === "work" ? "work" : "rest");
-        phasePill.textContent = state.phase === "work" ? "WORK" : "REST";
+        phasePill?.classList.add(state.phase === "work" ? "work" : "rest");
+        if (phasePill) phasePill.textContent = state.phase === "work" ? "WORK" : "REST";
       }
 
-      btnStart.disabled = state.running && !state.paused;
-      btnPause.textContent = state.paused ? "Resume" : "Pause";
+      if (btnStart) btnStart.disabled = state.running && !state.paused;
+      if (btnPause) btnPause.textContent = state.paused ? "Resume" : "Pause";
 
-      toggleStartWarn.classList.toggle("on", state.startWarnEnabled);
-      toggleEndWarn.classList.toggle("on", state.endWarnEnabled);
+      toggleStartWarn?.classList.toggle("on", state.startWarnEnabled);
+      toggleEndWarn?.classList.toggle("on", state.endWarnEnabled);
 
-      modalBackdrop.classList.toggle("show", state.keypadOpen);
-      settingsBackdrop.classList.toggle("show", state.settingsOpen);
+      modalBackdrop?.classList.toggle("show", state.keypadOpen);
+      settingsBackdrop?.classList.toggle("show", state.settingsOpen);
+
+      // top-left icon states
+      toggleWarningsIcon?.classList.toggle("active", settings.showWarnings);
+      togglePresetsIcon?.classList.toggle("active", settings.showPresets);
 
       if (state.keypadOpen) renderKeypad();
     }
 
-    // ---------- Engine ----------
+    /* ============================================================
+       TIMER ENGINE
+       ============================================================ */
     let lastTick = 0;
     function loop(ts){
       if (!lastTick) lastTick = ts;
@@ -1905,8 +1970,12 @@ header{
       render();
     }
 
-    // ---------- Controls ----------
-    btnStart.addEventListener("click", () => {
+    /* ============================================================
+       UI CONTROLS
+       ============================================================ */    addPresetBtn?.addEventListener("click", () => { userTapAudioPrime(); addPresetSlot(); });
+
+
+    btnStart?.addEventListener("click", () => {
       userTapAudioPrime();
       if (!state.running){
         state.running = true;
@@ -1919,7 +1988,7 @@ header{
       render();
     });
 
-    btnPause.addEventListener("click", () => {
+    btnPause?.addEventListener("click", () => {
       userTapAudioPrime();
       if (!state.running) return;
       state.paused = !state.paused;
@@ -1928,23 +1997,51 @@ header{
       render();
     });
 
-    btnReset.addEventListener("click", () => {
+    btnReset?.addEventListener("click", () => {
       userTapAudioPrime();
       resetRunState();
       render();
     });
 
-    toggleStartWarn.addEventListener("click", () => { userTapAudioPrime(); state.startWarnEnabled = !state.startWarnEnabled; render(); });
-    toggleEndWarn.addEventListener("click",   () => { userTapAudioPrime(); state.endWarnEnabled = !state.endWarnEnabled; render(); });
+    toggleStartWarn?.addEventListener("click", () => { userTapAudioPrime(); state.startWarnEnabled = !state.startWarnEnabled; render(); });
+    toggleEndWarn?.addEventListener("click",   () => { userTapAudioPrime(); state.endWarnEnabled = !state.endWarnEnabled; render(); });
 
-    setWork.addEventListener("click", () => { userTapAudioPrime(); openKeypad("work"); });
-    setRest.addEventListener("click",  () => { userTapAudioPrime(); openKeypad("rest"); });
-    setRounds.addEventListener("click",() => { userTapAudioPrime(); openKeypad("rounds"); });
+    setWork?.addEventListener("click", () => { userTapAudioPrime(); openKeypad("work"); });
+    setRest?.addEventListener("click",  () => { userTapAudioPrime(); openKeypad("rest"); });
+    setRounds?.addEventListener("click",() => { userTapAudioPrime(); openKeypad("rounds"); });
 
-    btnStartWarn.addEventListener("click", () => { userTapAudioPrime(); openKeypad("startWarn"); });
-    btnEndWarn.addEventListener("click",   () => { userTapAudioPrime(); openKeypad("endWarn"); });
+    btnStartWarn?.addEventListener("click", () => { userTapAudioPrime(); openKeypad("startWarn"); });
+    btnEndWarn?.addEventListener("click",   () => { userTapAudioPrime(); openKeypad("endWarn"); });
 
-    pad.addEventListener("click", (e) => {
+    // Top-left icon toggles (Warnings / Presets)
+    function iconKeySupport(el, onActivate){
+      if (!el) return;
+      el?.addEventListener("click", onActivate);
+      el?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          onActivate();
+        }
+      });
+    }
+
+    iconKeySupport(toggleWarningsIcon, () => {
+      userTapAudioPrime();
+      settings.showWarnings = !settings.showWarnings;
+      saveSettings();
+      syncSettingsUI();
+      render();
+    });
+
+    iconKeySupport(togglePresetsIcon, () => {
+      userTapAudioPrime();
+      settings.showPresets = !settings.showPresets;
+      saveSettings();
+      syncSettingsUI();
+      render();
+    });
+
+pad?.addEventListener("click", (e) => {
       userTapAudioPrime();
       const btn = e.target.closest("button[data-k]");
       if (!btn) return;
@@ -1956,63 +2053,49 @@ header{
       else if (k === "enter") applyKeypad();
     });
 
-    modalBackdrop.addEventListener("click", (e) => {
+    modalBackdrop?.addEventListener("click", (e) => {
       if (e.target === e.currentTarget) closeKeypad();
     });
 
-    // ---------- Settings ----------
-    clapVol.addEventListener("input", () => {
+    /* ============================================================
+       SETTINGS MODAL
+       ============================================================ */
+    clapVol?.addEventListener("input", () => {
       settings.clapVolume = clamp(parseFloat(clapVol.value), 0, 3);
-      clapVolVal.textContent = settings.clapVolume.toFixed(2);
+      if (clapVolVal) clapVolVal.textContent = settings.clapVolume.toFixed(2);
       saveSettings();
     });
-    clapInterval.addEventListener("input", () => {
+    clapInterval?.addEventListener("input", () => {
       settings.clapInterval = clamp(parseFloat(clapInterval.value), 0.03, 0.25);
-      clapIntervalVal.textContent = settings.clapInterval.toFixed(2) + "s";
+      if (clapIntervalVal) clapIntervalVal.textContent = settings.clapInterval.toFixed(2) + "s";
       saveSettings();
     });
-    buzzVol.addEventListener("input", () => {
+    buzzVol?.addEventListener("input", () => {
       settings.buzzVolume = clamp(parseFloat(buzzVol.value), 0, 1);
-      buzzVolVal.textContent = settings.buzzVolume.toFixed(2);
+      if (buzzVolVal) buzzVolVal.textContent = settings.buzzVolume.toFixed(2);
       saveSettings();
     });
-    buzzDur.addEventListener("input", () => {
+    buzzDur?.addEventListener("input", () => {
       settings.buzzDurationMs = clamp(parseFloat(buzzDur.value), 100, 1500);
-      buzzDurVal.textContent = String(Math.round(settings.buzzDurationMs)) + "ms";
+      if (buzzDurVal) buzzDurVal.textContent = String(Math.round(settings.buzzDurationMs)) + "ms";
       saveSettings();
     });
+    testClack?.addEventListener("click", () => { userTapAudioPrime(); clacksN(); });
+    testBuzz?.addEventListener("click", () => { userTapAudioPrime(); buzzer({freqHz:500}); });
 
-    testClack.addEventListener("click", () => { userTapAudioPrime(); clacksN(); });
-    testBuzz.addEventListener("click", () => { userTapAudioPrime(); buzzer({freqHz:500}); });
-
-    openSettingsBtn.addEventListener("click", () => {
+    openSettingsBtn?.addEventListener("click", () => {
       userTapAudioPrime();
       state.settingsOpen = true;
       syncSettingsUI();
       render();
     });
-    closeSettingsBtn.addEventListener("click", () => {
+    closeSettingsBtn?.addEventListener("click", () => {
       userTapAudioPrime();
       state.settingsOpen = false;
       saveSettings();
       render();
     });
-
-    // Side tabs: toggle Warnings / Presets blocks (replaces settings toggles)
-    tabWarnings.addEventListener("click", () => {
-      userTapAudioPrime();
-      settings.showWarnings = !settings.showWarnings;
-      saveSettings();
-      render();
-    });
-    tabPresets.addEventListener("click", () => {
-      userTapAudioPrime();
-      settings.showPresets = !settings.showPresets;
-      saveSettings();
-      render();
-    });
-
-    settingsBackdrop.addEventListener("click", (e) => {
+    settingsBackdrop?.addEventListener("click", (e) => {
       if (e.target === e.currentTarget){
         state.settingsOpen = false;
         saveSettings();
@@ -2020,7 +2103,9 @@ header{
       }
     });
 
-    // ---------- Presets ----------
+    /* ============================================================
+       PRESETS
+       ============================================================ */
     const LONG_PRESS_MS = 650;
 
     function applyPreset(p){
@@ -2057,48 +2142,9 @@ header{
       showToast("Preset Saved");
     }
 
-    function bindPreset(idx){
-      const el = presetBtns[idx].btn;
-      let pressTimer = null;
-      let longPressed = false;
-      let sx=0, sy=0;
-
-      const clearPress = () => {
-        if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
-      };
-
-      const onDown = (x,y) => {
-        userTapAudioPrime();
-        longPressed = false;
-        sx=x; sy=y;
-        clearPress();
-        pressTimer = setTimeout(() => {
-          longPressed = true;
-          savePresetAt(idx);
-        }, LONG_PRESS_MS);
-      };
-
-      const movedTooFar = (x,y) => {
-        const dx=x-sx, dy=y-sy;
-        return (dx*dx + dy*dy) > (14*14);
-      };
-
-      el.addEventListener("pointerdown", (e) => {
-        el.setPointerCapture?.(e.pointerId);
-        onDown(e.clientX, e.clientY);
-      });
-      el.addEventListener("pointermove", (e) => {
-        if (pressTimer && movedTooFar(e.clientX, e.clientY)) clearPress();
-      });
-      el.addEventListener("pointerup", () => {
-        clearPress();
-        if (!longPressed) applyPreset(presets[idx]);
-      });
-      el.addEventListener("pointercancel", clearPress);
-      el.addEventListener("contextmenu", (e)=>e.preventDefault());
-    }
-
-    // ---------- Init ----------
+    /* ============================================================
+       INITIALIZATION
+       ============================================================ */
     function resetAndRenderAll(){
       resetRunState();
       renderPresets();
@@ -2108,18 +2154,7 @@ header{
 
     presets = loadPresets();
     resetAndRenderAll();
-    for (let i=0;i<PRESET_COUNT;i++) bindPreset(i);
-    requestAnimationFrame(loop);
+requestAnimationFrame(loop);
   </script>
-
-<script>
-document.getElementById('toggleWarnings').onclick = () => {
-  document.getElementById('warningsBlock').classList.toggle('hidden');
-};
-document.getElementById('togglePresets').onclick = () => {
-  document.getElementById('presetsBlock').classList.toggle('hidden');
-};
-</script>
-
 </body>
 </html>
