@@ -945,7 +945,30 @@ header{
       }
     }
 
-  </style>
+  
+.header-icons {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: 12px;
+  vertical-align: middle;
+}
+.icon-btn {
+  background: #2a2a2a;
+  border: 1px solid #555;
+  color: #eee;
+  font-size: 16px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.icon-btn:hover {
+  background: #444;
+}
+.hidden {
+  display: none !important;
+}
+
+</style>
 </head>
 
 <body>
@@ -2088,5 +2111,15 @@ header{
     for (let i=0;i<PRESET_COUNT;i++) bindPreset(i);
     requestAnimationFrame(loop);
   </script>
+
+<script>
+document.getElementById('toggleWarnings').onclick = () => {
+  document.getElementById('warningsBlock').classList.toggle('hidden');
+};
+document.getElementById('togglePresets').onclick = () => {
+  document.getElementById('presetsBlock').classList.toggle('hidden');
+};
+</script>
+
 </body>
 </html>
