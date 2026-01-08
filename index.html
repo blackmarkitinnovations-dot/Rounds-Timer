@@ -29,6 +29,7 @@
       --sab: env(safe-area-inset-bottom);
       --sal: env(safe-area-inset-left);
       --tabw: 44px;
+      --tabgap: 12px;
     }
 
     *{ box-sizing:border-box; }
@@ -132,7 +133,7 @@ header{
       display:flex;
       gap: clamp(8px, 1.4vw, 12px);
       background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal) + var(--tabw));
+      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal) + var(--tabw) + var(--tabgap));
       padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
     }
 
@@ -169,7 +170,7 @@ header{
       overflow-y:auto;
       overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
-      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal));
+      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal) + var(--tabw) + var(--tabgap));
       padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
     }
 
@@ -177,7 +178,7 @@ header{
     /* Left side folder-style tabs (Warnings / Presets) */
     .sideTabs{
       position:absolute;
-      left: calc(0px + var(--sal));
+      left: calc(clamp(10px, 1.4vw, 14px) + var(--sal));
       top: clamp(96px, 16vh, 140px);
       display:flex;
       flex-direction:column;
@@ -223,7 +224,7 @@ header{
         padding-top: 6px !important;
         padding-right: calc(6px + var(--sar)) !important;
         padding-bottom: 6px !important;
-        padding-left: calc(6px + var(--sal) + var(--tabw)) !important;
+        padding-left: calc(6px + var(--sal) + var(--tabw) + var(--tabgap)) !important;
       }
     }
 
