@@ -28,6 +28,7 @@
       --sar: env(safe-area-inset-right);
       --sab: env(safe-area-inset-bottom);
       --sal: env(safe-area-inset-left);
+      --tabw: 44px;
     }
 
     *{ box-sizing:border-box; }
@@ -131,7 +132,7 @@ header{
       display:flex;
       gap: clamp(8px, 1.4vw, 12px);
       background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      padding-left: calc(clamp(10px, 1.8vw, 14px) + var(--sal));
+      padding-left: calc(clamp(10px, 1.4vw, 14px) + var(--sal) + var(--tabw));
       padding-right: calc(clamp(10px, 1.8vw, 14px) + var(--sar));
     }
 
@@ -158,6 +159,7 @@ header{
     .btnRow.red{ background: linear-gradient(180deg, rgba(255,43,43,.95), rgba(95,18,18,.65)); border-color: rgba(255,43,43,.35); }
 
     .content{
+      position:relative;
       flex: 1 1 auto;
       min-height:0;
       display:grid;
@@ -171,7 +173,61 @@ header{
       padding-right: calc(clamp(10px, 1.4vw, 14px) + var(--sar));
     }
 
-    /* FULL WIDTH MODE (fixes your “shift left” issue) */
+
+    /* Left side folder-style tabs (Warnings / Presets) */
+    .sideTabs{
+      position:absolute;
+      left: calc(0px + var(--sal));
+      top: clamp(96px, 16vh, 140px);
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      z-index: 25;
+      pointer-events:auto;
+    }
+    .sideTab{
+      width: var(--tabw);
+      height: 150px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      color: rgba(233,237,247,.92);
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg); /* read bottom-to-top like a folder tab */
+      box-shadow: 0 10px 22px rgba(0,0,0,.28);
+    }
+    .sideTab:active{ transform: rotate(180deg) translateY(1px); filter: brightness(.95); }
+    .sideTab.on{
+      background: linear-gradient(180deg, rgba(140,170,255,.26), rgba(255,255,255,.02));
+      border-color: rgba(140,170,255,.35);
+      color: #ffffff;
+    }
+
+    @media (max-width: 780px){
+      .sideTabs{ top: 88px; gap: 10px; }
+      .sideTab{ height: 120px; }
+    }
+
+    
+    @media (orientation: landscape) and (max-width: 950px){
+      /* keep room for side tabs even when other rules set padding shorthand */
+      .content{
+        padding-top: 6px !important;
+        padding-right: calc(6px + var(--sar)) !important;
+        padding-bottom: 6px !important;
+        padding-left: calc(6px + var(--sal) + var(--tabw)) !important;
+      }
+    }
+
+/* FULL WIDTH MODE (fixes your “shift left” issue) */
     .content.fullWidth{
       grid-template-columns: 1fr;
       gap: 0;
@@ -888,52 +944,6 @@ header{
       }
     }
 
-  
-    /* Dynamic presets list */
-    .presetList{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .presetItem{
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px 12px;
-      border:1px solid var(--stroke2);
-      border-radius:14px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      user-select:none;
-      touch-action: pan-y;
-      overflow:hidden;
-    }
-    .presetItem .title{
-      font-weight:900;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      font-size:13px;
-      opacity:.95;
-    }
-    .presetItem .meta{
-      font-size:12px;
-      color: var(--muted);
-      white-space:nowrap;
-    }
-    .presetItem .deleteHint{
-      position:absolute;
-      right:10px;
-      top:50%;
-      transform: translateY(-50%);
-      font-size:12px;
-      color: rgba(255,255,255,.65);
-      opacity:0;
-      transition: opacity .15s ease;
-      pointer-events:none;
-    }
-    .presetItem.swiping .deleteHint{ opacity:1; }
-
   </style>
 </head>
 
@@ -956,6 +966,12 @@ header{
     </div>
 
     <div class="content">
+      <div class="sideTabs" aria-label="Side tabs">
+        <button class="sideTab" id="tabWarnings" type="button">Warnings</button>
+        <button class="sideTab" id="tabPresets" type="button">Presets</button>
+      </div>
+
+      
       <aside class="leftCol" id="leftCol">
         <section class="block" id="warningsBlock">
           <div class="blockHeader"><span>Warnings</span></div>
@@ -974,8 +990,13 @@ header{
         <section class="block" id="presetsBlock" style="flex:1; min-height:0;">
           <div class="blockHeader">Presets</div>
           <div class="blockBody" style="padding:10px;">
-            <div class="presetList" id="presetList"></div>
-            <button class="btn ghost" id="addPresetBtn" type="button">+ Add preset</button>
+            <div class="presetGrid">
+              <button class="btn presetBtn" id="preset1"><span class="pname" id="preset1Label">--:--</span><span class="pmeta" id="preset1Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset2"><span class="pname" id="preset2Label">--:--</span><span class="pmeta" id="preset2Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset3"><span class="pname" id="preset3Label">--:--</span><span class="pmeta" id="preset3Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset4"><span class="pname" id="preset4Label">--:--</span><span class="pmeta" id="preset4Meta">hold to save</span></button>
+              <button class="btn presetBtn" id="preset5"><span class="pname" id="preset5Label">--:--</span><span class="pmeta" id="preset5Meta">hold to save</span></button>
+            </div>
           </div>
         </section>
       </aside>
@@ -1085,20 +1106,7 @@ header{
 
         <div class="setCard" style="grid-column: 1 / -1;">
           <h3>Display</h3>
-
-          <div class="row">
-            <div class="label">Show Warnings Block</div>
-            <div class="switch" id="toggleWarnVisible" role="switch" aria-checked="true" tabindex="0"></div>
-            <div class="value" id="warnVisibleVal"></div>
-          </div>
-
-          <div class="row">
-            <div class="label">Show Presets Block</div>
-            <div class="switch" id="togglePresetsVisible" role="switch" aria-checked="true" tabindex="0"></div>
-            <div class="value" id="presetsVisibleVal"></div>
-          </div>
-
-          <div class="row">
+<div class="row">
             <div class="label">Test Sounds</div>
             <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
               <button class="settingsClose" id="testClack" style="background:rgba(140,170,255,.12);">Test Clap</button>
@@ -1115,40 +1123,6 @@ header{
   <div class="toast" id="toast">Saved</div>
 
   <script>
-
-    // ---------- Keep Screen Awake (Wake Lock API) ----------
-    let wakeLock = null;
-    async function requestWakeLock(){
-      try{
-        if (!("wakeLock" in navigator)) return;
-        if (wakeLock) return;
-        wakeLock = await navigator.wakeLock.request("screen");
-        wakeLock.addEventListener("release", () => { wakeLock = null; });
-      }catch(e){
-        wakeLock = null;
-      }
-    }
-    async function releaseWakeLock(){
-      try{
-        if (wakeLock){
-          await wakeLock.release();
-          wakeLock = null;
-        }
-      }catch(e){
-        wakeLock = null;
-      }
-    }
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible"){
-        try{
-          if (typeof state !== "undefined" && (state.running || state.paused)) requestWakeLock();
-        }catch(e){}
-      }else{
-        releaseWakeLock();
-      }
-    });
-
-
 
     // ---------- iOS Safari viewport fix ----------
     // Keeps the UI sized to the *visible* viewport so the Safari toolbars don't cover timers/buttons.
@@ -1203,150 +1177,6 @@ header{
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }
     let settings = loadSettings();
-
-    // ---------- Preset Manager (dynamic) ----------
-    const PRESETS_KEY = "hiit_presets_v2";
-
-    function captureCurrentConfig(){
-      // capture a safe subset of current settings
-      const keys = [
-        "workSec","restSec","rounds",
-        "warningStartSec","warningEndSec"
-      ];
-      const out = {};
-      for (const k of keys){
-        if (k in settings) out[k] = settings[k];
-      }
-      return out;
-    }
-
-    function defaultPreset(){
-      return { name: "Preset 1", data: captureCurrentConfig() };
-    }
-
-    function loadPresets(){
-      try{
-        const raw = localStorage.getItem(PRESETS_KEY);
-        if (!raw) return [ defaultPreset() ];
-        const arr = JSON.parse(raw);
-        if (!Array.isArray(arr) || arr.length < 1) return [ defaultPreset() ];
-        return arr;
-      }catch(e){
-        return [ defaultPreset() ];
-      }
-    }
-    function savePresets(){ localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); }
-
-    function applyConfig(cfg){
-      if (!cfg) return;
-      for (const [k,v] of Object.entries(cfg)){
-        if (k in settings) settings[k] = v;
-      }
-      // sync UI inputs if your code has this helper
-      if (typeof syncUIFromSettings === "function") syncUIFromSettings();
-      saveSettings(settings);
-      render();
-    }
-
-    let presets = loadPresets();
-
-    const presetListEl = document.getElementById("presetList");
-    const addPresetBtn = document.getElementById("addPresetBtn");
-
-    function renderPresets(){
-      if (!presetListEl) return;
-      presetListEl.innerHTML = "";
-      presets.forEach((p, idx) => {
-        const row = document.createElement("div");
-        row.className = "presetItem";
-
-        const left = document.createElement("div");
-        const title = document.createElement("div");
-        title.className = "title";
-        title.textContent = p.name || ("Preset " + (idx+1));
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        const d = p.data || {};
-        const w = (d.workSec ?? settings.workSec ?? 0);
-        const r = (d.restSec ?? settings.restSec ?? 0);
-        const n = (d.rounds ?? settings.rounds ?? 0);
-        meta.textContent = `${w}s / ${r}s • ${n} rnds`;
-        left.appendChild(title);
-        left.appendChild(meta);
-
-        const hint = document.createElement("div");
-        hint.className = "deleteHint";
-        hint.textContent = "Swipe left to delete";
-
-        row.appendChild(left);
-        row.appendChild(hint);
-
-        // Tap = load
-        row.addEventListener("click", () => {
-          try{ userTapAudioPrime(); }catch(e){}
-          applyConfig(p.data || {});
-        });
-
-        // Long press = save current into preset
-        let lp = null;
-        const startLP = () => {
-          lp = setTimeout(() => {
-            p.data = captureCurrentConfig();
-            savePresets();
-            renderPresets();
-          }, 550);
-        };
-        const cancelLP = () => { if (lp){ clearTimeout(lp); lp = null; } };
-        row.addEventListener("pointerdown", startLP);
-        row.addEventListener("pointerup", cancelLP);
-        row.addEventListener("pointercancel", cancelLP);
-        row.addEventListener("pointerleave", cancelLP);
-
-        // Swipe left to delete
-        let startX = 0, dx = 0, swiping = false;
-        row.addEventListener("touchstart", (e) => {
-          startX = e.touches[0].clientX;
-          dx = 0; swiping = false;
-        }, {passive:true});
-        row.addEventListener("touchmove", (e) => {
-          dx = e.touches[0].clientX - startX;
-          if (dx < -10){ swiping = true; row.classList.add("swiping"); }
-          if (!swiping) return;
-          const tx = Math.max(dx, -120);
-          row.style.transform = `translateX(${tx}px)`;
-        }, {passive:true});
-        row.addEventListener("touchend", () => {
-          if (!swiping){
-            row.style.transform = "";
-            row.classList.remove("swiping");
-            return;
-          }
-          if (dx < -80 && presets.length > 1){
-            presets.splice(idx, 1);
-            presets.forEach((pp,i) => {
-              if (!pp.name || /^Preset\s\d+$/i.test(pp.name)) pp.name = "Preset " + (i+1);
-            });
-            savePresets();
-            renderPresets();
-          }
-          row.style.transform = "";
-          row.classList.remove("swiping");
-        }, {passive:true});
-
-        presetListEl.appendChild(row);
-      });
-    }
-
-    if (addPresetBtn){
-      addPresetBtn.addEventListener("click", () => {
-        try{ userTapAudioPrime(); }catch(e){}
-        const next = presets.length + 1;
-        presets.push({ name: "Preset " + next, data: captureCurrentConfig() });
-        savePresets();
-        renderPresets();
-      });
-    }
-
 
     // ---------------- Wake Lock (prevent screen sleep while running) ----------------
     // Works on most modern Chrome/Edge/Android; iOS Safari support is limited.
@@ -1688,6 +1518,9 @@ header{
     const warningsBlock = document.getElementById("warningsBlock");
     const presetsBlock = document.getElementById("presetsBlock");
 
+    const tabWarnings = document.getElementById("tabWarnings");
+    const tabPresets  = document.getElementById("tabPresets");
+
     const modalBackdrop = document.getElementById("modalBackdrop");
     const modalTitle = document.getElementById("modalTitle");
     const modalHint = document.getElementById("modalHint");
@@ -1698,12 +1531,6 @@ header{
     const openSettingsBtn = document.getElementById("openSettings");
     const settingsBackdrop = document.getElementById("settingsBackdrop");
     const closeSettingsBtn = document.getElementById("closeSettings");
-
-    const toggleWarnVisible = document.getElementById("toggleWarnVisible");
-    const warnVisibleVal = document.getElementById("warnVisibleVal");
-
-    const togglePresetsVisible = document.getElementById("togglePresetsVisible");
-    const presetsVisibleVal = document.getElementById("presetsVisibleVal");
 
     const testClack = document.getElementById("testClack");
     const testBuzz = document.getElementById("testBuzz");
@@ -1929,18 +1756,16 @@ header{
 
       buzzDur.value = String(settings.buzzDurationMs);
       buzzDurVal.textContent = String(Math.round(settings.buzzDurationMs)) + "ms";
-
-      toggleWarnVisible.classList.toggle("on", settings.showWarnings);
-      warnVisibleVal.textContent = settings.showWarnings ? "ON" : "OFF";
-
-      togglePresetsVisible.classList.toggle("on", settings.showPresets);
-      presetsVisibleVal.textContent = settings.showPresets ? "ON" : "OFF";
     }
 
     function render(){
       // show/hide blocks
       warningsBlock.classList.toggle("hidden", !settings.showWarnings);
       presetsBlock.classList.toggle("hidden", !settings.showPresets);
+
+      // side tabs visual state
+      if (tabWarnings) tabWarnings.classList.toggle("on", settings.showWarnings);
+      if (tabPresets)  tabPresets.classList.toggle("on", settings.showPresets);
 
       // Full width mode when both hidden
       const showLeft = settings.showWarnings || settings.showPresets;
@@ -2133,22 +1958,6 @@ header{
       saveSettings();
     });
 
-    toggleWarnVisible.addEventListener("click", () => {
-      userTapAudioPrime();
-      settings.showWarnings = !settings.showWarnings;
-      saveSettings();
-      syncSettingsUI();
-      render();
-    });
-
-    togglePresetsVisible.addEventListener("click", () => {
-      userTapAudioPrime();
-      settings.showPresets = !settings.showPresets;
-      saveSettings();
-      syncSettingsUI();
-      render();
-    });
-
     testClack.addEventListener("click", () => { userTapAudioPrime(); clacksN(); });
     testBuzz.addEventListener("click", () => { userTapAudioPrime(); buzzer({freqHz:500}); });
 
@@ -2164,6 +1973,21 @@ header{
       saveSettings();
       render();
     });
+
+    // Side tabs: toggle Warnings / Presets blocks (replaces settings toggles)
+    tabWarnings.addEventListener("click", () => {
+      userTapAudioPrime();
+      settings.showWarnings = !settings.showWarnings;
+      saveSettings();
+      render();
+    });
+    tabPresets.addEventListener("click", () => {
+      userTapAudioPrime();
+      settings.showPresets = !settings.showPresets;
+      saveSettings();
+      render();
+    });
+
     settingsBackdrop.addEventListener("click", (e) => {
       if (e.target === e.currentTarget){
         state.settingsOpen = false;
