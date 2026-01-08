@@ -888,40 +888,51 @@ header{
       }
     }
 
-    /* Dynamic presets */
-    .presetAdd{
+  
+    /* Dynamic presets list */
+    .presetList{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .presetItem{
+      position:relative;
       display:flex;
       align-items:center;
-      justify-content:center;
+      justify-content:space-between;
       gap:10px;
-      padding: 14px;
+      padding:12px 12px;
+      border:1px solid var(--stroke2);
       border-radius:14px;
-      border:1px dashed rgba(255,255,255,.22);
-      background: rgba(0,0,0,.18);
-      color: var(--text);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      user-select:none;
+      touch-action: pan-y;
+      overflow:hidden;
+    }
+    .presetItem .title{
       font-weight:900;
       letter-spacing:.10em;
       text-transform:uppercase;
-      font-size: 16px;
+      font-size:13px;
+      opacity:.95;
     }
-    .presetAdd:active{ transform: translateY(1px); filter:brightness(.95); }
-
-    .presetBtn{
-      position: relative;
-      overflow:hidden;
+    .presetItem .meta{
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
     }
-    .presetBtn .swipeHint{
+    .presetItem .deleteHint{
       position:absolute;
       right:10px;
       top:50%;
       transform: translateY(-50%);
-      font-size:11px;
-      color: rgba(255,255,255,.35);
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      font-weight:800;
+      font-size:12px;
+      color: rgba(255,255,255,.65);
+      opacity:0;
+      transition: opacity .15s ease;
       pointer-events:none;
     }
+    .presetItem.swiping .deleteHint{ opacity:1; }
 
   </style>
 </head>
@@ -963,7 +974,8 @@ header{
         <section class="block" id="presetsBlock" style="flex:1; min-height:0;">
           <div class="blockHeader">Presets</div>
           <div class="blockBody" style="padding:10px;">
-            <div class="presetGrid" id="presetGrid"></div>
+            <div class="presetList" id="presetList"></div>
+            <button class="btn ghost" id="addPresetBtn" type="button">+ Add preset</button>
           </div>
         </section>
       </aside>
@@ -1104,6 +1116,40 @@ header{
 
   <script>
 
+    // ---------- Keep Screen Awake (Wake Lock API) ----------
+    let wakeLock = null;
+    async function requestWakeLock(){
+      try{
+        if (!("wakeLock" in navigator)) return;
+        if (wakeLock) return;
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+      }catch(e){
+        wakeLock = null;
+      }
+    }
+    async function releaseWakeLock(){
+      try{
+        if (wakeLock){
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      }catch(e){
+        wakeLock = null;
+      }
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible"){
+        try{
+          if (typeof state !== "undefined" && (state.running || state.paused)) requestWakeLock();
+        }catch(e){}
+      }else{
+        releaseWakeLock();
+      }
+    });
+
+
+
     // ---------- iOS Safari viewport fix ----------
     // Keeps the UI sized to the *visible* viewport so the Safari toolbars don't cover timers/buttons.
     (function(){
@@ -1157,6 +1203,150 @@ header{
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }
     let settings = loadSettings();
+
+    // ---------- Preset Manager (dynamic) ----------
+    const PRESETS_KEY = "hiit_presets_v2";
+
+    function captureCurrentConfig(){
+      // capture a safe subset of current settings
+      const keys = [
+        "workSec","restSec","rounds",
+        "warningStartSec","warningEndSec"
+      ];
+      const out = {};
+      for (const k of keys){
+        if (k in settings) out[k] = settings[k];
+      }
+      return out;
+    }
+
+    function defaultPreset(){
+      return { name: "Preset 1", data: captureCurrentConfig() };
+    }
+
+    function loadPresets(){
+      try{
+        const raw = localStorage.getItem(PRESETS_KEY);
+        if (!raw) return [ defaultPreset() ];
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr) || arr.length < 1) return [ defaultPreset() ];
+        return arr;
+      }catch(e){
+        return [ defaultPreset() ];
+      }
+    }
+    function savePresets(){ localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); }
+
+    function applyConfig(cfg){
+      if (!cfg) return;
+      for (const [k,v] of Object.entries(cfg)){
+        if (k in settings) settings[k] = v;
+      }
+      // sync UI inputs if your code has this helper
+      if (typeof syncUIFromSettings === "function") syncUIFromSettings();
+      saveSettings(settings);
+      render();
+    }
+
+    let presets = loadPresets();
+
+    const presetListEl = document.getElementById("presetList");
+    const addPresetBtn = document.getElementById("addPresetBtn");
+
+    function renderPresets(){
+      if (!presetListEl) return;
+      presetListEl.innerHTML = "";
+      presets.forEach((p, idx) => {
+        const row = document.createElement("div");
+        row.className = "presetItem";
+
+        const left = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "title";
+        title.textContent = p.name || ("Preset " + (idx+1));
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const d = p.data || {};
+        const w = (d.workSec ?? settings.workSec ?? 0);
+        const r = (d.restSec ?? settings.restSec ?? 0);
+        const n = (d.rounds ?? settings.rounds ?? 0);
+        meta.textContent = `${w}s / ${r}s • ${n} rnds`;
+        left.appendChild(title);
+        left.appendChild(meta);
+
+        const hint = document.createElement("div");
+        hint.className = "deleteHint";
+        hint.textContent = "Swipe left to delete";
+
+        row.appendChild(left);
+        row.appendChild(hint);
+
+        // Tap = load
+        row.addEventListener("click", () => {
+          try{ userTapAudioPrime(); }catch(e){}
+          applyConfig(p.data || {});
+        });
+
+        // Long press = save current into preset
+        let lp = null;
+        const startLP = () => {
+          lp = setTimeout(() => {
+            p.data = captureCurrentConfig();
+            savePresets();
+            renderPresets();
+          }, 550);
+        };
+        const cancelLP = () => { if (lp){ clearTimeout(lp); lp = null; } };
+        row.addEventListener("pointerdown", startLP);
+        row.addEventListener("pointerup", cancelLP);
+        row.addEventListener("pointercancel", cancelLP);
+        row.addEventListener("pointerleave", cancelLP);
+
+        // Swipe left to delete
+        let startX = 0, dx = 0, swiping = false;
+        row.addEventListener("touchstart", (e) => {
+          startX = e.touches[0].clientX;
+          dx = 0; swiping = false;
+        }, {passive:true});
+        row.addEventListener("touchmove", (e) => {
+          dx = e.touches[0].clientX - startX;
+          if (dx < -10){ swiping = true; row.classList.add("swiping"); }
+          if (!swiping) return;
+          const tx = Math.max(dx, -120);
+          row.style.transform = `translateX(${tx}px)`;
+        }, {passive:true});
+        row.addEventListener("touchend", () => {
+          if (!swiping){
+            row.style.transform = "";
+            row.classList.remove("swiping");
+            return;
+          }
+          if (dx < -80 && presets.length > 1){
+            presets.splice(idx, 1);
+            presets.forEach((pp,i) => {
+              if (!pp.name || /^Preset\s\d+$/i.test(pp.name)) pp.name = "Preset " + (i+1);
+            });
+            savePresets();
+            renderPresets();
+          }
+          row.style.transform = "";
+          row.classList.remove("swiping");
+        }, {passive:true});
+
+        presetListEl.appendChild(row);
+      });
+    }
+
+    if (addPresetBtn){
+      addPresetBtn.addEventListener("click", () => {
+        try{ userTapAudioPrime(); }catch(e){}
+        const next = presets.length + 1;
+        presets.push({ name: "Preset " + next, data: captureCurrentConfig() });
+        savePresets();
+        renderPresets();
+      });
+    }
+
 
     // ---------------- Wake Lock (prevent screen sleep while running) ----------------
     // Works on most modern Chrome/Edge/Android; iOS Safari support is limited.
@@ -1447,58 +1637,31 @@ header{
       settingsOpen: false
     };
 
-    // ---------- Presets (dynamic) ----------
-    const PRESET_KEY = "hiit_presets_v6_dynamic";
-    const LEGACY_PRESET_KEY = "hiit_presets_v5";
-    const MIN_PRESETS = 1;
-
-    function emptyPreset(){
-      return { workMs: 0, restMs: 0, rounds: 0, roundsInfinite:false, workInfinite:false };
-    }
-    function normalizePreset(p){
-      const x = p || {};
-      return {
-        workMs: typeof x.workMs === "number" ? x.workMs : 0,
-        restMs: typeof x.restMs === "number" ? x.restMs : 0,
-        rounds: typeof x.rounds === "number" ? x.rounds : 0,
-        roundsInfinite: !!x.roundsInfinite,
-        workInfinite: !!x.workInfinite
-      };
-    }
+    // ---------- Presets ----------
+    const PRESET_KEY = "hiit_presets_v5";
+    const PRESET_COUNT = 5;
+    const defaultPresets = Array.from({length: PRESET_COUNT}, () => ({
+      workMs: 0, restMs: 0, rounds: 0, roundsInfinite:false, workInfinite:false
+    }));
 
     function loadPresets(){
       try{
         const raw = localStorage.getItem(PRESET_KEY);
-        if (raw){
-          const arr = JSON.parse(raw);
-          if (Array.isArray(arr) && arr.length){
-            return arr.map(normalizePreset);
-          }
-        }
-
-        // migrate: if old 5-slot presets exist, keep the first non-empty (or first slot)
-        const legacyRaw = localStorage.getItem(LEGACY_PRESET_KEY);
-        if (legacyRaw){
-          const legacy = JSON.parse(legacyRaw);
-          if (Array.isArray(legacy) && legacy.length){
-            const firstNonEmpty = legacy.find(p => p && (p.workInfinite || (typeof p.workMs === "number" && p.workMs > 0)));
-            return [ normalizePreset(firstNonEmpty || legacy[0]) ];
-          }
-        }
-
-        return [ emptyPreset() ];
+        if (!raw) return JSON.parse(JSON.stringify(defaultPresets));
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr) || arr.length !== PRESET_COUNT) return JSON.parse(JSON.stringify(defaultPresets));
+        return arr.map(p => ({
+          workMs: typeof p.workMs === "number" ? p.workMs : 0,
+          restMs: typeof p.restMs === "number" ? p.restMs : 0,
+          rounds: typeof p.rounds === "number" ? p.rounds : 0,
+          roundsInfinite: !!p.roundsInfinite,
+          workInfinite: !!p.workInfinite
+        }));
       }catch{
-        return [ emptyPreset() ];
+        return JSON.parse(JSON.stringify(defaultPresets));
       }
     }
-    function savePresets(){
-      // always keep at least one
-      if (!Array.isArray(presets) || presets.length < MIN_PRESETS){
-        presets = [ emptyPreset() ];
-      }
-      localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
-    }
-
+    function savePresets(p){ localStorage.setItem(PRESET_KEY, JSON.stringify(p)); }
     let presets = loadPresets();
 
     // ---------- Elements ----------
@@ -1556,7 +1719,13 @@ header{
     const buzzDurVal = document.getElementById("buzzDurVal");
 
     const toast = document.getElementById("toast");
-    const presetGridEl = document.getElementById("presetGrid");
+    const presetBtns = [
+      { btn: document.getElementById("preset1"), label: document.getElementById("preset1Label"), meta: document.getElementById("preset1Meta") },
+      { btn: document.getElementById("preset2"), label: document.getElementById("preset2Label"), meta: document.getElementById("preset2Meta") },
+      { btn: document.getElementById("preset3"), label: document.getElementById("preset3Label"), meta: document.getElementById("preset3Meta") },
+      { btn: document.getElementById("preset4"), label: document.getElementById("preset4Label"), meta: document.getElementById("preset4Meta") },
+      { btn: document.getElementById("preset5"), label: document.getElementById("preset5Label"), meta: document.getElementById("preset5Meta") }
+    ];
 
     // ---------- Toast ----------
     let toastTimer = null;
@@ -1732,148 +1901,14 @@ header{
     }
 
     // ---------- Render ----------
-    
     function renderPresets(){
-      if (!presetGridEl) return;
-
-      // rebuild list
-      presetGridEl.innerHTML = "";
-
-      const hasMeaningful = (p) => !!p && (p.workInfinite || (typeof p.workMs === "number" && p.workMs > 0));
-
-      const makePresetButton = (p, idx) => {
-        const btn = document.createElement("button");
-        btn.className = "btn presetBtn";
-        btn.type = "button";
-        btn.dataset.idx = String(idx);
-
-        const name = document.createElement("span");
-        name.className = "pname";
-
-        const meta = document.createElement("span");
-        meta.className = "pmeta";
-
-        const hint = document.createElement("span");
-        hint.className = "swipeHint";
-        hint.textContent = "swipe left";
-
-        if (!hasMeaningful(p)){
-          name.textContent = "--:--";
-          meta.textContent = "hold to save";
-        } else {
-          const wLabel = p.workInfinite ? "∞" : fmtMMSS_Countdown(p.workMs);
-          name.textContent = wLabel;
-          const r = fmtMMSS_Countdown(p.restMs || 0);
-          const rounds = p.roundsInfinite ? "∞" : String(p.rounds || 0);
-          meta.textContent = `rest ${r} • rounds ${rounds}`;
+      for (let i=0;i<PRESET_COUNT;i++){
+        const p = presets[i];
+        if (!p || (!p.workInfinite && (!p.workMs || p.workMs <= 0))){
+          presetBtns[i].label.textContent = "--:--";
+          presetBtns[i].meta.textContent = "hold to save";
+          continue;
         }
-
-        btn.appendChild(name);
-        btn.appendChild(meta);
-        btn.appendChild(hint);
-
-        // interactions: tap = load, hold = save, swipe left = delete
-        let pressTimer = null;
-        let longPressed = false;
-        let swiped = false;
-        let sx = 0, sy = 0;
-
-        const clearPress = () => {
-          if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
-        };
-
-        const saveToThisPreset = () => {
-          presets[idx] = {
-            workMs: state.workMs,
-            restMs: state.restMs,
-            rounds: state.totalRounds,
-            roundsInfinite: !!state.roundsInfinite,
-            workInfinite: !!state.workInfinite
-          };
-          savePresets();
-          showToast("Preset Saved");
-          renderPresets();
-        };
-
-        const deleteThisPreset = () => {
-          presets.splice(idx, 1);
-          if (presets.length < MIN_PRESETS) presets = [ emptyPreset() ];
-          savePresets();
-          showToast("Deleted");
-          renderPresets();
-        };
-
-        const movedTooFar = (x,y) => (Math.abs(x - sx) > 14 || Math.abs(y - sy) > 14);
-
-        btn.addEventListener("pointerdown", (e) => {
-          userTapAudioPrime();
-          longPressed = false;
-          swiped = false;
-          sx = e.clientX; sy = e.clientY;
-          clearPress();
-
-          // start hold-to-save
-          pressTimer = setTimeout(() => {
-            longPressed = true;
-            clearPress();
-            saveToThisPreset();
-          }, 600);
-
-          btn.setPointerCapture?.(e.pointerId);
-        });
-
-        btn.addEventListener("pointermove", (e) => {
-          if (swiped) return;
-
-          const dx = e.clientX - sx;
-          const dy = e.clientY - sy;
-
-          // swipe left to delete
-          if (dx < -70 && Math.abs(dx) > Math.abs(dy) * 1.2){
-            swiped = true;
-            clearPress();
-            deleteThisPreset();
-            return;
-          }
-
-          // if user drags, cancel hold-to-save
-          if (pressTimer && movedTooFar(e.clientX, e.clientY)){
-            clearPress();
-          }
-        });
-
-        btn.addEventListener("pointerup", () => {
-          clearPress();
-          if (longPressed || swiped) return;
-          if (hasMeaningful(presets[idx])) applyPreset(presets[idx]);
-        });
-
-        btn.addEventListener("pointercancel", clearPress);
-        btn.addEventListener("contextmenu", (e)=>e.preventDefault());
-
-        return btn;
-      };
-
-      presets.forEach((p, idx) => {
-        presetGridEl.appendChild(makePresetButton(p, idx));
-      });
-
-      // Add (+) button
-      const addBtn = document.createElement("button");
-      addBtn.className = "presetAdd";
-      addBtn.type = "button";
-      addBtn.textContent = "+  Add Preset";
-      addBtn.addEventListener("click", () => {
-        userTapAudioPrime();
-        presets.push(emptyPreset());
-        savePresets();
-        showToast("Added");
-        renderPresets();
-        // scroll to bottom to show the new preset if list is tall
-        presetGridEl.scrollTo({ top: presetGridEl.scrollHeight, behavior: "smooth" });
-      });
-      presetGridEl.appendChild(addBtn);
-    }
         const wLabel = p.workInfinite ? "∞" : fmtMMSS_Countdown(p.workMs);
         presetBtns[i].label.textContent = wLabel;
         const r = fmtMMSS_Countdown(p.restMs || 0);
@@ -2039,7 +2074,8 @@ header{
       userTapAudioPrime();
       if (!state.running) return;
       state.paused = !state.paused;
-      requestWakeLock();
+      if (state.paused) releaseWakeLock();
+      else requestWakeLock();
       render();
     });
 
@@ -2173,6 +2209,47 @@ header{
       showToast("Preset Saved");
     }
 
+    function bindPreset(idx){
+      const el = presetBtns[idx].btn;
+      let pressTimer = null;
+      let longPressed = false;
+      let sx=0, sy=0;
+
+      const clearPress = () => {
+        if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+      };
+
+      const onDown = (x,y) => {
+        userTapAudioPrime();
+        longPressed = false;
+        sx=x; sy=y;
+        clearPress();
+        pressTimer = setTimeout(() => {
+          longPressed = true;
+          savePresetAt(idx);
+        }, LONG_PRESS_MS);
+      };
+
+      const movedTooFar = (x,y) => {
+        const dx=x-sx, dy=y-sy;
+        return (dx*dx + dy*dy) > (14*14);
+      };
+
+      el.addEventListener("pointerdown", (e) => {
+        el.setPointerCapture?.(e.pointerId);
+        onDown(e.clientX, e.clientY);
+      });
+      el.addEventListener("pointermove", (e) => {
+        if (pressTimer && movedTooFar(e.clientX, e.clientY)) clearPress();
+      });
+      el.addEventListener("pointerup", () => {
+        clearPress();
+        if (!longPressed) applyPreset(presets[idx]);
+      });
+      el.addEventListener("pointercancel", clearPress);
+      el.addEventListener("contextmenu", (e)=>e.preventDefault());
+    }
+
     // ---------- Init ----------
     function resetAndRenderAll(){
       resetRunState();
@@ -2183,6 +2260,7 @@ header{
 
     presets = loadPresets();
     resetAndRenderAll();
+    for (let i=0;i<PRESET_COUNT;i++) bindPreset(i);
     requestAnimationFrame(loop);
   </script>
 </body>
